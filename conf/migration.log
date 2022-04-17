@@ -1,0 +1,52 @@
+08:01:00.921 | INFO [com.raonsnc.wa.mig.MigrationMain] main                            (20) |  - configuratin path : ../conf\KMS_SAMPLE_01\conf.yaml
+08:01:00.978 | INFO [com.raonsnc.wa.mig.MigrationMain] main                            (24) | {op.count=100, condition={etime=2022:04:15,07:51:26, stime=2022:04:15,07:51:26, type=time}, repository={tar.url=jdbc:mariadb://192.168.0.105:3306/scim, tar.passwd=1q2w3e4r!@, tar.user=scim, src.user=scim, src.url=jdbc:mariadb://192.168.0.105:3306/scim, src.passwd=1q2w3e4r!@}, class=KMS}
+08:01:00.978 | INFO [com.raonsnc.wa.mig.MigrationMain] main                            (29) | -------
+08:42:49.829 | INFO [com.raonsnc.wa.mig.MigrationMain] load                            (35) |  - configuratin path : ../conf\KMS_SAMPLE_01\conf.yaml
+08:42:49.883 | ERROR [com.raonsnc.wa.mig.MigrationMain] main                            (23) | while scanning a simple key
+ in 'reader', line 13, column 3:
+      src.query.count:select count(*)  ... 
+      ^
+could not find expected ':'
+ in 'reader', line 14, column 3:
+      src.query.search:select * from t ... 
+      ^
+
+org.yaml.snakeyaml.scanner.ScannerException: while scanning a simple key
+ in 'reader', line 13, column 3:
+      src.query.count:select count(*)  ... 
+      ^
+could not find expected ':'
+ in 'reader', line 14, column 3:
+      src.query.search:select * from t ... 
+      ^
+
+	at org.yaml.snakeyaml.scanner.ScannerImpl.stalePossibleSimpleKeys(ScannerImpl.java:505)
+	at org.yaml.snakeyaml.scanner.ScannerImpl.needMoreTokens(ScannerImpl.java:320)
+	at org.yaml.snakeyaml.scanner.ScannerImpl.checkToken(ScannerImpl.java:250)
+	at org.yaml.snakeyaml.parser.ParserImpl$ParseBlockMappingKey.produce(ParserImpl.java:628)
+	at org.yaml.snakeyaml.parser.ParserImpl.peekEvent(ParserImpl.java:166)
+	at org.yaml.snakeyaml.comments.CommentEventsCollector$1.peek(CommentEventsCollector.java:59)
+	at org.yaml.snakeyaml.comments.CommentEventsCollector$1.peek(CommentEventsCollector.java:45)
+	at org.yaml.snakeyaml.comments.CommentEventsCollector.collectEvents(CommentEventsCollector.java:140)
+	at org.yaml.snakeyaml.comments.CommentEventsCollector.collectEvents(CommentEventsCollector.java:119)
+	at org.yaml.snakeyaml.composer.Composer.composeScalarNode(Composer.java:214)
+	at org.yaml.snakeyaml.composer.Composer.composeNode(Composer.java:184)
+	at org.yaml.snakeyaml.composer.Composer.composeValueNode(Composer.java:314)
+	at org.yaml.snakeyaml.composer.Composer.composeMappingChildren(Composer.java:305)
+	at org.yaml.snakeyaml.composer.Composer.composeMappingNode(Composer.java:286)
+	at org.yaml.snakeyaml.composer.Composer.composeNode(Composer.java:188)
+	at org.yaml.snakeyaml.composer.Composer.composeValueNode(Composer.java:314)
+	at org.yaml.snakeyaml.composer.Composer.composeMappingChildren(Composer.java:305)
+	at org.yaml.snakeyaml.composer.Composer.composeMappingNode(Composer.java:286)
+	at org.yaml.snakeyaml.composer.Composer.composeNode(Composer.java:188)
+	at org.yaml.snakeyaml.composer.Composer.getNode(Composer.java:115)
+	at org.yaml.snakeyaml.composer.Composer.getSingleNode(Composer.java:142)
+	at org.yaml.snakeyaml.constructor.BaseConstructor.getSingleData(BaseConstructor.java:151)
+	at org.yaml.snakeyaml.Yaml.loadFromReader(Yaml.java:491)
+	at org.yaml.snakeyaml.Yaml.load(Yaml.java:442)
+	at com.raonsnc.wa.mig.MigrationMain.load(MigrationMain.java:38)
+	at com.raonsnc.wa.mig.MigrationMain.main(MigrationMain.java:19)
+08:42:49.883 | INFO [com.raonsnc.wa.mig.MigrationMain] main                            (25) | -------
+08:43:35.482 | INFO [com.raonsnc.wa.mig.MigrationMain] load                            (35) |  - configuratin path : ../conf\KMS_SAMPLE_01\conf.yaml
+08:43:35.538 | INFO [com.raonsnc.wa.mig.MigrationMain] load                            (39) | {op.count=100, condition={etime=2022:04:15,07:51:26, stime=2022:04:15,07:51:26, type=time}, repository={tar.url=jdbc:mariadb://192.168.0.105:3306/scim, tar.passwd=1q2w3e4r!@, tar.user=scim, src.user=scim, src.url=jdbc:mariadb://192.168.0.105:3306/scim, src.passwd=1q2w3e4r!@, src.query.count=select count(*) from tableA, src.query.search=select * from tableA}, class=KMS}
+08:43:35.539 | INFO [com.raonsnc.wa.mig.MigrationMain] main                            (25) | -------
