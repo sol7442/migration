@@ -1,1 +1,4 @@
 //wa-migration-impl
+dependencies {
+	implementation project(":wa-migration-core")
+}

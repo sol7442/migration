@@ -4,5 +4,5 @@
   - lombok
   
 2.개발환경 실행
-  -Dconf.path = ../conf
-  -Dsys.path=KMS_SAPLME_01
+  - -Dconf.path = ../conf
+  - -Dsys.path=KMS_SAPLME_01

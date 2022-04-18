@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.quantum.mig.MigrationException;
-import com.quantum.mig.MigrationHandler;
 import com.quantum.mig.entity.MigrationRecord;
 import com.quantum.mig.entity.MigrationResult;
 import com.quantum.mig.repo.MigrationResultRepository;
@@ -17,10 +15,12 @@ public class SmartMigration implements Runnable {
 	ExecutorService executor;
 	Map<String, Object> conf;
 	MigrationHandler handler = null;
+	PrintStepHandler steper = null;
 	public SmartMigration(Map<String, Object> conf) {
 		this.conf = conf;
 		this.executor = Executors.newSingleThreadExecutor();;
 		this.handler = null; // load
+		this.steper = new ConsoleStepPrinter(10);
 	}
 
 	public void start() {
@@ -41,7 +41,9 @@ public class SmartMigration implements Runnable {
 			case "file":
 				result = migByFile();
 				break;
+			case "simul":
 			default:
+				result = migSimulate();
 				break;
 			}			
 			
@@ -50,6 +52,11 @@ public class SmartMigration implements Runnable {
 		}finally {
 			storeResult(result);
 		}
+	}
+
+	private MigrationResult migSimulate() {
+		
+		return null;
 	}
 
 	private MigrationResult migByFile() throws MigrationException {
@@ -64,6 +71,7 @@ public class SmartMigration implements Runnable {
 			Map<String,Object> data = src_repo.read(id);
 			
 			MigrationRecord recode = handler.migration(data);
+			steper.print(recode);
 			res_repo.record(recode);
 		}
 		return result;
@@ -85,6 +93,7 @@ public class SmartMigration implements Runnable {
 		List<Map<String,Object>> data_list =  src_repo.search(conf);
 		for (Map<String, Object> data : data_list) {
 			MigrationRecord recode = handler.migration(data);
+			steper.print(recode);
 			res_repo.record(recode);
 		}
 		

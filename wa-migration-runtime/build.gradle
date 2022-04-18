@@ -4,6 +4,6 @@ dependencies {
 	
 	implementation group: 'org.yaml', name: 'snakeyaml', version: '1.30'
 	
-	implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.9'
-	implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1'
+	//implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.9'
+	//implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1'
 }
