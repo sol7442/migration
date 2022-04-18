@@ -7,5 +7,5 @@ public interface MigrationSourceRepository {
 	public Map<String,Object> read(String id);
 	
 	public int count(Map<String,Object> params);
-	public List<Map<String,Object>> search(Map<String,Object> params);
+	public List<Map<String,Object>> search(int page, int count, Map<String,Object> params);
 }

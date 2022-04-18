@@ -1,6 +1,7 @@
 //wa-migration-runtime
 dependencies {
 	implementation project(":wa-migration-core")
+	implementation project(":wa-migration-impl")
 	
 	implementation group: 'org.yaml', name: 'snakeyaml', version: '1.30'
 	

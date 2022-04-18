@@ -40,22 +40,13 @@ public class RepositoryManager {
 			String user = (String)repo.get("tar.user");
 			String passwd = (String)repo.get("tar.passwd");
 			DataSource datasource = DataSourceBuilder.build(url, user, passwd);
-			
-			TransactionFactory transactionFactory = new JdbcTransactionFactory();
-			Environment environment = new Environment("target", transactionFactory, datasource);
+			Environment environment = new Environment("target", new JdbcTransactionFactory(), datasource);
 			
 			Configuration mybatis_config = new Configuration();
 			mybatis_config.setLogImpl(RepositoryLogger.class);
 			mybatis_config.setJdbcTypeForNull(JdbcType.NULL);
 			mybatis_config.setCallSettersOnNulls(true);
 			mybatis_config.setEnvironment(environment);
-			
-//			if(className.toLowerCase().contains("db2"))
-//				mybatis_config.setJdbcTypeForNull(JdbcType.VARCHAR);
-//			else
-//				mybatis_config.setJdbcTypeForNull(JdbcType.NULL);
-		
-			
 			
 			
 			//factoris = new SqlSessionFactoryBuilder().build(mybatis_config);

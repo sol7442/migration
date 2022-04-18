@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.inzent.sh.KmsMigrationHandler;
 import com.quantum.mig.entity.MigrationRecord;
 import com.quantum.mig.entity.MigrationResult;
 import com.quantum.mig.repo.MigrationResultRepository;
@@ -19,8 +20,18 @@ public class SmartMigration implements Runnable {
 	public SmartMigration(Map<String, Object> conf) {
 		this.conf = conf;
 		this.executor = Executors.newSingleThreadExecutor();;
-		this.handler = null; // load
-		this.steper = new ConsoleStepPrinter(10);
+		this.handler  = loadMigrationHandler(conf);
+		this.steper   = loadStepPrinter(conf);//new ConsoleStepPrinter(10);
+	}
+
+	private PrintStepHandler loadStepPrinter(Map<String, Object> conf2) {
+		//TODO -- 컨피그를 통해서 정확하게 로딩 해라.
+		return new ConsoleStepPrinter(10);
+	}
+
+	private MigrationHandler loadMigrationHandler(Map<String, Object> conf) {
+		//TODO -- 컨피그를 통해서 정확하게 로딩 해라.
+		return new KmsMigrationHandler();
 	}
 
 	public void start() {
@@ -55,6 +66,7 @@ public class SmartMigration implements Runnable {
 	}
 
 	private MigrationResult migSimulate() {
+		// 돌아가는 거서 처럼 콘솔에 씀.
 		
 		return null;
 	}
@@ -63,8 +75,8 @@ public class SmartMigration implements Runnable {
 		MigrationResult result = new MigrationResult();
 		result.migType = "FILE";
 		
-		MigrationSourceRepository src_repo = RepositoryManager.getInstance().getRepository("key",MigrationSourceRepository.class);
-		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("key",MigrationResultRepository.class);
+		MigrationSourceRepository src_repo = RepositoryManager.getInstance().getRepository("source",MigrationSourceRepository.class);
+		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("result",MigrationResultRepository.class);
 		
 		List<String> dis = readIdsFile();
 		for (String id : dis) {
@@ -86,15 +98,24 @@ public class SmartMigration implements Runnable {
 		MigrationResult result = new MigrationResult();
 		result.migType = "TIME";
 		
-		MigrationSourceRepository src_repo = RepositoryManager.getInstance().getRepository("key",MigrationSourceRepository.class);
-		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("key",MigrationResultRepository.class);
+		MigrationSourceRepository src_repo = RepositoryManager.getInstance().getRepository("source",MigrationSourceRepository.class);
+		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("result",MigrationResultRepository.class);
 		
 		src_repo.count(conf);
-		List<Map<String,Object>> data_list =  src_repo.search(conf);
-		for (Map<String, Object> data : data_list) {
-			MigrationRecord recode = handler.migration(data);
-			steper.print(recode);
-			res_repo.record(recode);
+		int total_count = src_repo.count(conf);
+		int run_count = 0;
+		// 1000
+		while (run_count < total_count) {
+			// 출력 가운트 만큼 조회 = 페이지 네이션 - 10단위로 될 만큼
+			int page = 0;
+			int count = 10;
+			List<Map<String,Object>> data_list =  src_repo.search(page,count,conf);
+			for (Map<String, Object> data : data_list) {
+				MigrationRecord recode = handler.migration(data);
+				res_repo.record(recode);
+				
+				steper.print(recode);
+			}
 		}
 		
 		return result;
@@ -102,11 +123,11 @@ public class SmartMigration implements Runnable {
 
 	private void saveErrorInfo() {
 		// TODO Auto-generated method stub
-		// save error info file...
+		// 에러가 난 정보에 대해여 파일로 정확하게 기록할 껏.
 	}
 
 	private void storeResult(MigrationResult result) {
-		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("key",MigrationResultRepository.class);
+		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("report",MigrationResultRepository.class);
 		res_repo.save(result);
 	}
 	

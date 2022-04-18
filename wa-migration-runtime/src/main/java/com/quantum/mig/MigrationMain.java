@@ -29,8 +29,8 @@ public class MigrationMain {
 
 	private static Map<String, Object> load() throws FileNotFoundException {
 		StringBuilder str_builder = new StringBuilder();
-		str_builder.append(System.getProperty("conf.path")).append(File.separator);
 		str_builder.append(System.getProperty("sys.path")).append(File.separator);
+		str_builder.append(System.getProperty("conf.path")).append(File.separator);
 		str_builder.append("conf.yml");
 		log.info(" - configuratin path : {}", str_builder.toString());
 		

@@ -10,4 +10,7 @@ repository:
   src.user: scim
   src.url: jdbc:mariadb://192.168.0.105:3306/scim
   src.passwd: 1q2w3e4r!@
+  rep.user: scim
+  rep.url: jdbc:mariadb://192.168.0.105:3306/scim
+  rep.passwd: 1q2w3e4r!@
 class: KMS
