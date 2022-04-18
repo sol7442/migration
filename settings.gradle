@@ -2,3 +2,4 @@ rootProject.name = 'wa-migration'
 include "wa-migration-core"
 include "wa-migration-impl"
 include "wa-migration-runtime"
+include "wa-migration-daemon"
