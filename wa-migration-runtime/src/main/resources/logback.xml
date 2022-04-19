@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration debug="true" scan="true" scanPeriod="30 seconds">
-	<if condition='isNull("conf.path")'>
-		<then><property name="log.path" value="../conf" /></then>
-	</if>
-	<if condition='isNull("log.mode")'>
-		<then><property name="log.mode" value="debug" /></then>	
-	</if>	
- 	<property file="${conf.path}/system.properties" />
+ 	<property file="${sys.path}/system.properties" />
  	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
       <layout class="ch.qos.logback.classic.PatternLayout">
@@ -25,10 +19,10 @@
             <pattern>%-16(%d{HH:mm:ss.SSS} | %level) [%-32.32C{32}] %-32M\(%L\) | %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="info" additivity="false">
+    <root level="debug" additivity="false">
        <appender-ref ref="STDOUT" />
     </root>
-    <logger name="com.raonsnc" level="${log.mode}" additivity="false" >
+    <logger name="com.quantum" level="${log.mode}" additivity="false" >
         <appender-ref ref="APP_LOG" />
     </logger>    
 </configuration>

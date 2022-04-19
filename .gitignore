@@ -4,3 +4,4 @@
 **/.gradle/
 **/.settings/
 **/bin/
+conf/migration.log

@@ -14,7 +14,8 @@ public class KmsMigrationHandler implements MigrationHandler {
 	@Override
 	public MigrationRecord migration(Map<String, Object> data) throws MigrationException {
 		MigrationRecord record = new MigrationRecord("mig-id");
-		log.debug("{}","test");
+		
+		log.debug(" -- {}","test");
 		
 		return record;
 	}
