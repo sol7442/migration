@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.SqlSession;
+
 import com.inzent.sh.KmsMigrationHandler;
 import com.quantum.mig.entity.MigrationRecord;
 import com.quantum.mig.entity.MigrationResult;
@@ -24,14 +26,19 @@ public class SmartMigration implements Runnable {
 		this.steper   = loadStepPrinter(conf);//new ConsoleStepPrinter(10);
 	}
 
-	private PrintStepHandler loadStepPrinter(Map<String, Object> conf2) {
+	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
 		//TODO -- 컨피그를 통해서 정확하게 로딩 해라.
+		//config > out.count 를 가지고온다. 
 		return new ConsoleStepPrinter(10);
+		
 	}
 
-	private MigrationHandler loadMigrationHandler(Map<String, Object> conf) {
-		//TODO -- 컨피그를 통해서 정확하게 로딩 해라.
-		return new KmsMigrationHandler();
+	private MigrationHandler loadMigrationHandler(Map<String, Object> conf) throws MigrationException {
+		try {
+			return (MigrationHandler) Class.forName((String) conf.get("handler")).newInstance();
+		} catch (ClassNotFoundException  | InstantiationException | IllegalAccessException e) {
+			throw new MigrationException(e.getMessage(),e);
+		}
 	}
 
 	public void start() {
@@ -102,22 +109,48 @@ public class SmartMigration implements Runnable {
 		MigrationResult result = new MigrationResult();
 		result.migType = "TIME";
 		
-		MigrationSourceRepository src_repo = RepositoryManager.getInstance().getRepository("source",MigrationSourceRepository.class);
-		MigrationResultRepository res_repo = RepositoryManager.getInstance().getRepository("result",MigrationResultRepository.class);
-		
+		List<Map<String,Object>> data_list = null; //  src_repo.search(page,count,conf);
+		int page = 0;
+		int count = 0;
 		int total_count = 1000;//src_repo.count(conf);
 		int run_count = 0;
-		// 1000
+		//가져오는 부분 -time으로  - 내가 할거
+		try(SqlSession src_session = RepositoryManager.getInstance().openSession("source")){
+			
+			//dao
+			MigrationSourceRepository src_repo = src_session.getMapper(MigrationSourceRepository.class);
+			//0,0 - paging , condition : duration -  yml 에서 가져옴
+			total_count = src_repo.count(condition);
+			
+			data_list = src_repo.search(0, 0, condition);
+			
+
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		try(SqlSession res_session = RepositoryManager.getInstance().openSession("source")){
+			res_session.getMapper(MigrationSourceRepository.class);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		//공통파트 -  조회
+		counting(data_list, total_count, run_count);
+		
+		//res_session
+
+		
+		//공통파트 - 결과 저장하기   -- 내가 할거
+		return result;
+	}
+
+	private void counting(List<Map<String, Object>> data_list, int total_count, int run_count)
+			throws MigrationException {
 		while (run_count < total_count) {
-			// 출력 가운트 만큼 조회 = 페이지 네이션 - 10단위로 될 만큼
-			int page = 0;
-			int count = 10;
+			// 출력 가운트 만큼 조회 = 페이지 네이션 - 10단위로 될 만큼  -> yml 에서 가져와야 한다. 
+
 			run_count++;
-			List<Map<String,Object>> data_list = new ArrayList<Map<String,Object>>();//  src_repo.search(page,count,conf);
-			data_list.add(new HashMap<String, Object>());
-			data_list.add(new HashMap<String, Object>());
-			data_list.add(new HashMap<String, Object>());
-			data_list.add(new HashMap<String, Object>());
 			
 			for (Map<String, Object> data : data_list) {
 				MigrationRecord recode = handler.migration(data);
@@ -126,8 +159,6 @@ public class SmartMigration implements Runnable {
 				steper.print(recode);
 			}
 		}
-		
-		return result;
 	}
 
 	private void saveErrorInfo() {
