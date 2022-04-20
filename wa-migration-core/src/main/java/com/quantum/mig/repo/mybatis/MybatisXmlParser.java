@@ -11,8 +11,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MybatisXmlParser {
+	
+	public static String getMigHome() {
+		if(System.getProperty("mig.home") != null) {
+			return System.getProperty("mig.home"); 
+		}else {
+			return System.getProperty("user.dir");
+		}
+	}
 	public static void parse(File path, Configuration conf) {
+		String real_path = getMigHome() + path;
+		path = new File(real_path);
 		if(path.isDirectory()) {
+			System.out.println("MYBATIS MAPPERS =>" + path);
 			for (File map_file : path.listFiles()) {
 				if(map_file.getName().endsWith(".xml")) {
 					try {
@@ -24,6 +35,9 @@ public class MybatisXmlParser {
 					}
 				}
 			}
+		}
+		else {
+			System.out.println("MYBATIS MAPPERS => is not Directory");
 		}
 	}
 }

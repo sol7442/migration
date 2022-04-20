@@ -1,35 +1,44 @@
+class: KMS
+handler : com.inzent.sh.KmsMigrationHandler
+out.count: 10
+#migByTime
 condition:
-  etime: 2022:04:15,07:51:26
-  stime: 2022:04:15,07:51:26
   type: time
-  count: 100
+time.condition:
+  type: time
+  stime: 2022:04:15 12:00:00
+  etime: 2022:04:20 12:00:00
+  page: 10
+  count: 10
+file.condition:
+  type: file
+simul.condition:
+  type: simul
 repository:
   # 사용 x
   tar.drivder: org.mariadb.jdbc.Driver
   tar.url: jdbc:mariadb://192.168.0.105:3306/scim
-  tar.passwd: 1q2w3e4r!@
-  tar.user: scim
-  tar.path: ../conf/mybatis
+  tar.passwd: oacxpwd@1
+  tar.user: root
+  tar.path: /conf/mapper/test/tar/
   
   # 원천테이블
   src.drivder: org.mariadb.jdbc.Driver
-  src.user: scim
-  src.url: jdbc:mariadb://192.168.0.105:3306/scim
-  src.passwd: 1q2w3e4r!@
-  src.path: ../conf/mybatis
+  src.url: jdbc:mariadb://192.168.0.105:3306/migration
+  src.user: root
+  src.passwd: oacxpwd@1
+  src.path: /conf/mapper/test/src/
   
   # 결과테이블
   res.drivder: org.mariadb.jdbc.Driver
-  res.user: scim
-  res.url: jdbc:mariadb://192.168.0.105:3306/scim
-  res.passwd: 1q2w3e4r!@
-  res.path: ../conf/mybatis
+  res.url: jdbc:mariadb://192.168.0.105:3306/migration
+  res.user: root
+  res.passwd: oacxpwd@1
+  res.path: /conf/mapper/test/result/
   
   # 이력테이블
   audit.drivder: org.mariadb.jdbc.Driver
-  audit.user: scim
-  audit.url: jdbc:mariadb://192.168.0.105:3306/scim
-  audit.passwd: 1q2w3e4r!@
-  audit.path: ../conf/mybatis
-class: KMS
-handler : com.inzent.sh.KmsMigrationHandler
+  audit.url: jdbc:mariadb://192.168.0.105:3306/migration
+  audit.user: root
+  audit.passwd: oacxpwd@1
+  audit.path: /conf/mapper/test/audit/

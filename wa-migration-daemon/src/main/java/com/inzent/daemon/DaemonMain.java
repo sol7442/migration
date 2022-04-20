@@ -6,11 +6,10 @@ import org.apache.commons.daemon.DaemonInitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.quantum.mig.MigrationConfiguration;
 import com.quantum.mig.MigrationMain;
 
 
-public class DaemonMain implements MigrationConfiguration, Daemon {
+public class DaemonMain implements Daemon {
 	static DaemonMain daemon = null;
 	Logger log = LoggerFactory.getLogger(DaemonMain.class);
 	public static void main(String[] args) {
@@ -42,9 +41,9 @@ public class DaemonMain implements MigrationConfiguration, Daemon {
 	@Override
 	public void init(DaemonContext context) throws DaemonInitException, Exception {
 		
-		// config ÆÄÀÏ ·Îµå 
-		// log °æ·Î ¼³Á¤ 
-		// init_jetty µî ÁøÇà
+		// config ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ 
+		// log ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 
+		// init_jetty ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 		
 	}

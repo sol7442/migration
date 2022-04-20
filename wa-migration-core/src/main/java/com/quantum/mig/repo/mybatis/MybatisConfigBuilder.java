@@ -22,5 +22,6 @@ public class MybatisConfigBuilder {
 		
 		return mybatis_config;
 		
+		
 	}
 }

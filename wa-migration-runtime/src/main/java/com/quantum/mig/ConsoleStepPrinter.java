@@ -1,7 +1,7 @@
 package com.quantum.mig;
 
 
-import com.quantum.mig.entity.MigrationRecord;
+import com.quantum.mig.entity.MigrationAudit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,11 +13,11 @@ public class ConsoleStepPrinter implements PrintStepHandler{
 		this.step = step;
 	}
 	@Override
-	public void print(MigrationRecord record) {
-		//out.count ¸¶´Ù »óÅÂ ÇÏ³ª¾¿ Âï¾îÁÙ ÇÊ¿äÀÖÀ½.  
-		//total , ¼º°ø, ½ÇÆĞ, ´ÜÀ§ : step
-		//count ÃÊ±âÈ­ ÇÊ¿ä 
-		// ÀÚ¼¼ÇÑ °Å´Â ³ªÁß¿¡, 
+	public void print(MigrationAudit record) {
+		//out.count ë§ˆë‹¤ ìƒíƒœ í•˜ë‚˜ì”© ì°ì–´ì¤„ í•„ìš”ìˆìŒ.  
+		//total , ì„±ê³µ, ì‹¤íŒ¨, ë‹¨ìœ„ : step
+		//count ì´ˆê¸°í™” í•„ìš” 
+		// ìì„¸í•œ ê±°ëŠ” ë‚˜ì¤‘ì—, 
 		if(this.step == this.count) {
 			log.debug(" -- {}","print");
 			this.count = 0;

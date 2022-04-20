@@ -1,9 +1,9 @@
 package com.quantum.mig;
 
-import java.util.Map;
-
-import com.quantum.mig.entity.MigrationRecord;
+import com.quantum.mig.entity.MigrationAudit;
+import com.quantum.mig.entity.MigrationSource;
 
 public interface MigrationHandler {
-	 public MigrationRecord migration(Map<String,Object> data) throws MigrationException;
+	 public MigrationAudit migration(MigrationSource data) throws MigrationException;
+//	 public MigrationAudit migration(Map<String,Object> data) throws MigrationException;
 }

@@ -1,32 +1,19 @@
 package com.quantum.mig.repo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.apache.ibatis.builder.xml.XMLMapperBuilder;
-import org.apache.ibatis.mapping.Environment;
-import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.ibatis.transaction.TransactionFactory;
-import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
-import org.apache.ibatis.type.JdbcType;
 
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.repo.mybatis.MybatisSessionFactory;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RepositoryManager {
+	private transient SqlSessionFactory src_factory;
 	private static RepositoryManager instance;
 	private Map<String,SqlSessionFactory> factory = new HashMap<String, SqlSessionFactory>();
 
@@ -42,7 +29,6 @@ public class RepositoryManager {
 	public void connect(Map<String, Object> conf) throws MigrationException {
 		try {
 			Map<String,Object> repo = (Map<String, Object>) conf.get("repository");
-			
 			//소스 테이블
 			Class.forName((String)repo.get("src.drivder"));
 			SqlSessionFactory source = MybatisSessionFactory.builder()
@@ -74,7 +60,7 @@ public class RepositoryManager {
 			
 			
 			/*
-			 * //이력 테이블 Class.forName((String)repo.get("tar.drivder")); SqlSessionFactory
+			 * Class.forName((String)repo.get("tar.drivder")); SqlSessionFactory
 			 * target = MybatisSessionFactory.builder() .name("target")
 			 * .url((String)repo.get("tar.url")) .user((String)repo.get("tar.user"))
 			 * .path((String)repo.get("tar.path"))
