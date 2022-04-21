@@ -7,3 +7,5 @@
 conf/migration.log
 **/release
 **/*.class
+**/*.tar
+**/*.zip
