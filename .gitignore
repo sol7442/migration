@@ -9,3 +9,4 @@ conf/migration.log
 **/*.class
 **/*.tar
 **/*.zip
+**/*.log
