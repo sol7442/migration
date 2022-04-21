@@ -6,3 +6,4 @@
 **/bin/
 conf/migration.log
 **/release
+**/*.class
