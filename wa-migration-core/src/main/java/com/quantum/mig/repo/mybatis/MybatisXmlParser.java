@@ -7,23 +7,19 @@ import java.io.FileNotFoundException;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.session.Configuration;
 
+import com.quantum.mig.manager.EnvironmentManager;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MybatisXmlParser {
 	
-	public static String getMigHome() {
-		if(System.getProperty("mig.home") != null) {
-			return System.getProperty("mig.home"); 
-		}else {
-			return System.getProperty("user.dir");
-		}
-	}
+
 	public static void parse(File path, Configuration conf) {
-		String real_path = getMigHome() + path;
+		String real_path = EnvironmentManager.getInstance().getMigHome() + path;
 		path = new File(real_path);
 		if(path.isDirectory()) {
-			System.out.println("MYBATIS MAPPERS =>" + path);
+			log.info("MYBATIS MAPPERS => {} " , path);
 			for (File map_file : path.listFiles()) {
 				if(map_file.getName().endsWith(".xml")) {
 					try {

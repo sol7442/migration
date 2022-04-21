@@ -29,6 +29,7 @@ public class RepositoryManager {
 	public void connect(Map<String, Object> conf) throws MigrationException {
 		try {
 			Map<String,Object> repo = (Map<String, Object>) conf.get("repository");
+			log.info("-Loading Repository => {} " , repo );
 			//소스 테이블
 			Class.forName((String)repo.get("src.drivder"));
 			SqlSessionFactory source = MybatisSessionFactory.builder()
@@ -70,7 +71,6 @@ public class RepositoryManager {
 			this.factory.put("source", source);
 			this.factory.put("audit", audit);
 			this.factory.put("result", result);
-
 		}catch (Exception e) {
 			throw new MigrationException(e.getMessage(),e);
 		}

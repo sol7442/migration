@@ -9,9 +9,9 @@ public class MigrationResult {
 	public String migClass; 		// KMS,APPV,PRINT - mig 하는 대상의 종류
 	public String migType;  		// file. time, simul
 	public String confPath; 		// 사용한 컨피그
-	public String totalCnt;			// 전체 데이터 수
-	public String targetCnt;		// 대상 데이터 수
-	public String successCnt;		// 성공 데이터 수
-	public String failCnt;			// 실패 데이터 수
+	public int totalCnt;			// 전체 데이터 수
+	public int targetCnt;		// 대상 데이터 수
+	public int successCnt;		// 성공 데이터 수
+	public int failCnt;			// 실패 데이터 수
 
 }

@@ -36,12 +36,13 @@ public class SmartMigration implements Runnable {
 	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
 	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
 		//total count는 conf 에서 구할수있는 값이 아님.
-		return new ConsoleStepPrinter(10, (int)conf.get("out.count"));
+		return new ConsoleStepPrinter(100, (int)conf.get("out.count"));
 	}
 
 	private MigrationHandler loadMigrationHandler(Map<String, Object> conf) throws MigrationException {
 		try {
 			//핸들러 메소드 호출
+			log.info("- Load Handler : {} ", (MigrationHandler) Class.forName((String) conf.get("handler")).newInstance());
 			return (MigrationHandler) Class.forName((String) conf.get("handler")).newInstance();
 		} catch (ClassNotFoundException  | InstantiationException | IllegalAccessException e) {
 			throw new MigrationException(e.getMessage(),e);
@@ -54,6 +55,7 @@ public class SmartMigration implements Runnable {
 	}
 	public void stop() {
 		//this.executor.shutdown();
+		
 	}
 
 	@SuppressWarnings("unchecked")
@@ -70,12 +72,12 @@ public class SmartMigration implements Runnable {
 				break;
 			case "file":
 				condition = (Map<String,Object>)this.conf.get("file.condition");
-				result = migByFile();
+				result = migByTime(condition);
 				break;
 			case "simul":
 				condition = (Map<String,Object>)this.conf.get("simul.condition");
+				result = migSimulate(condition);
 			default:
-				result = migSimulate();
 				break;
 			}			
 			
@@ -86,8 +88,13 @@ public class SmartMigration implements Runnable {
 		}
 	}
 
-	private MigrationResult migSimulate() {
-		// 돌아가는 거서 처럼 콘솔에 씀.
+	private MigrationResult migSimulate(Map<String, Object> condition) {
+		try {
+			migByTime(condition);
+		} catch (MigrationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		return null;
 	}
@@ -114,12 +121,9 @@ public class SmartMigration implements Runnable {
 	private MigrationResult migByTime(Map<String,Object> condition) throws MigrationException {
 		log.info(" - time.condition :  {} " , condition);
 		
-		//결과 
-		MigrationResult result = new MigrationResult();
-		result.migType = "TIME";
-		
+
 		//한줄한줄에 대한 이력
-		MigrationAudit audit = new MigrationAudit(null);
+		MigrationAudit audit;
 
 		List<MigrationSource> data_list = null;
 		
@@ -130,32 +134,43 @@ public class SmartMigration implements Runnable {
 		int total_count = 0;
 		int run_count = 0;
 		
-		total_count = srcService.size();
-		log.info("TOTAL_COUNT  =>  :  {} " , total_count);
-		
 		Map<String,Object> query_param = new HashMap<String,Object>();
 		query_param.put("page", page);
 		query_param.put("count", count);
 		query_param.put("stime", makeSearchRequest(stime));
 		query_param.put("etime", makeSearchRequest(etime));
 		//조건으로 검색
+		total_count = srcService.size();
 		data_list = srcService.search(page, count, query_param);
-		log.info("TOTAL_COUNT  =>  :  {} " , total_count);
+		log.info("- TASK COUNT  =>  :  {} " , total_count);
 		if(data_list != null) {
 			for (MigrationSource list : data_list) {
-				list.getUSER_ID();
+				log.info("- TASK SEARCH => : {}" , list.toString());
+				auditRecord(total_count,list.getUSER_ID());
 				
-				System.out.println(list.toString());
 			}
 		}
+		
+		//결과 
+		MigrationResult result = new MigrationResult();
+		result.setMigClass("KMS");
+		result.setMigType((String) condition.get("type"));
+		result.setConfPath("test/kms");
+		result.setTotalCnt(total_count);
+		result.setTargetCnt(data_list.size());
+		result.setSuccessCnt(10);
+		result.setFailCnt(0);
 		
 		//공통파트 -  조회
 		counting(data_list, total_count, run_count);
 		//공통파트 - 결과 저장하기   -- 내가 할거
-		auditService.record(audit);
+//		auditService.record(audit);
+//		auditRecord(audit);
 		return result;
 	}
-	
+	public MigrationResult setResult(MigrationResult result) {
+		return result;
+	}
 	//yml date formt 20:01:01 -> 20-01-01 
 	public String makeSearchRequest(String time) {
 		StringBuffer dateForm = new StringBuffer();
@@ -174,7 +189,7 @@ public class SmartMigration implements Runnable {
 			for (MigrationSource data : data_list) {
 				MigrationAudit recode = handler.migration(data);
 				//res_repo.record(recode);
-				steper.print(recode);
+				//steper.print(recode);
 			}
 		}
 	}
@@ -186,19 +201,22 @@ public class SmartMigration implements Runnable {
 
 	private void storeResult(MigrationResult result) {
 		try {
+			log.debug(" - TASK RESULT : {} " , result.toString());
 			resService.record(result);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
 		}
 	}
-	private void auditRecord(MigrationAudit audit) {
+	private void auditRecord(int total , String id) {
 		try {
+			MigrationAudit audit = new MigrationAudit(id);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
 			audit.setAction("0");
 			audit.setMsg("테스트");
 			audit.setTagId("TEST1");
 			audit.setResult(true);
 			audit.setTime(sdf.format(new Date()));
+			log.debug(" - TASK AUDIT  : {} " , audit.toString());
 			auditService.record(audit);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);

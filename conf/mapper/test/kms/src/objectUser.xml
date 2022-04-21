@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.quantum.mig.repo.MigrationSourceRepository">
+	<select id="size" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT COUNT(*) FROM OBJECT_USER
+	</select>
+	<select id="search" resultType="com.quantum.mig.entity.MigrationSource" parameterType="java.util.Map">
+		SELECT 
+			<include refid="mig.src.col"/>
+		FROM OBJECT_USER
+		WHERE 1=1
+	</select>
+	<select id="read" resultType="com.quantum.mig.entity.MigrationSource" parameterType="com.quantum.mig.entity.DefaultMigIdentity">
+		SELECT 
+			*
+		FROM OBJECT_USER
+		WHERE 
+			id = #{id} 
+	</select>
+</mapper>

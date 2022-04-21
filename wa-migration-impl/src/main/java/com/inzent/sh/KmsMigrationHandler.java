@@ -1,7 +1,5 @@
 package com.inzent.sh;
 
-import java.util.Map;
-
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.MigrationHandler;
 import com.quantum.mig.entity.MigrationAudit;
@@ -15,8 +13,7 @@ public class KmsMigrationHandler implements MigrationHandler {
 	@Override
 	public MigrationAudit migration(MigrationSource data) throws MigrationException {
 		MigrationAudit record = new MigrationAudit("mig-id");
-		
-		//log.debug(" -- {}","test");
+		log.debug(" -- {}",record.getSrcId());
 		
 		return record;
 	}
