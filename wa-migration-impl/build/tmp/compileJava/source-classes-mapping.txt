@@ -1,2 +1,4 @@
+com/inzent/sh/KmsSimulMigrationHandler.java
+ com.inzent.sh.KmsSimulMigrationHandler
 com/inzent/sh/KmsMigrationHandler.java
  com.inzent.sh.KmsMigrationHandler

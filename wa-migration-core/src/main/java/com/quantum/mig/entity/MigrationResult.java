@@ -1,5 +1,6 @@
 package com.quantum.mig.entity;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data

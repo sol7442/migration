@@ -1,7 +1,5 @@
 package com.quantum.mig.entity;
 
-import java.util.Date;
-
 import lombok.Data;
 
 @Data

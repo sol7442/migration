@@ -32,11 +32,11 @@ public class EnvironmentManager extends Properties {
 		return value;
 	}
 
-	public String getMigHome() {
-		if(System.getProperty("mig.home") != null ){
-			return System.getProperty("mig.home");
-		}else {
-			return System.getProperty("user.dir");
-		}
-	}
+//	public String getMigHome() {
+//		if(System.getProperty("mig.home") != null ){
+//			return System.getProperty("mig.home");
+//		}else {
+//			return System.getProperty("user.dir");
+//		}
+//	}
 }

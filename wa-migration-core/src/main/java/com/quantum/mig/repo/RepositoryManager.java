@@ -29,7 +29,7 @@ public class RepositoryManager {
 	public void connect(Map<String, Object> conf) throws MigrationException {
 		try {
 			Map<String,Object> repo = (Map<String, Object>) conf.get("repository");
-			log.info("-Loading Repository => {} " , repo );
+			log.info("- Loading Repository => {} " , repo );
 			//소스 테이블
 			Class.forName((String)repo.get("src.drivder"));
 			SqlSessionFactory source = MybatisSessionFactory.builder()

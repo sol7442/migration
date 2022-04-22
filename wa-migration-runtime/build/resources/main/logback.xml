@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration debug="true" scan="true" scanPeriod="30 seconds">
- 	<property file="${sys.path}/system.properties" />
- 	
+ 	<property file="${system.properties}/system.properties" />
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
       <layout class="ch.qos.logback.classic.PatternLayout">
         <pattern>[%5p] [%F]%M\(%L\) : %m%n</pattern>

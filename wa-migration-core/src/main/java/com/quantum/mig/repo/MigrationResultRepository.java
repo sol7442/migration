@@ -1,7 +1,6 @@
 package com.quantum.mig.repo;
 
 import com.quantum.mig.MigrationException;
-import com.quantum.mig.entity.MigrationAudit;
 import com.quantum.mig.entity.MigrationResult;
 
 //record
