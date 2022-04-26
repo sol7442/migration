@@ -1,31 +1,19 @@
 package com.quantum.mig.repo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.apache.ibatis.builder.xml.XMLMapperBuilder;
-import org.apache.ibatis.mapping.Environment;
-import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.ibatis.transaction.TransactionFactory;
-import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
-import org.apache.ibatis.type.JdbcType;
 
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.repo.mybatis.MybatisSessionFactory;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RepositoryManager {
+	private transient SqlSessionFactory src_factory;
 	private static RepositoryManager instance;
 	private Map<String,SqlSessionFactory> factory = new HashMap<String, SqlSessionFactory>();
 
@@ -41,7 +29,8 @@ public class RepositoryManager {
 	public void connect(Map<String, Object> conf) throws MigrationException {
 		try {
 			Map<String,Object> repo = (Map<String, Object>) conf.get("repository");
-	
+			log.info("- Loading Repository => {} " , repo );
+			//소스 테이블
 			Class.forName((String)repo.get("src.drivder"));
 			SqlSessionFactory source = MybatisSessionFactory.builder()
 				.name("source")
@@ -51,14 +40,17 @@ public class RepositoryManager {
 				.path((String)repo.get("src.path"))
 				.build().build();
 			
-			Class.forName((String)repo.get("tar.drivder"));
-			SqlSessionFactory target = MybatisSessionFactory.builder()
-					.name("target")
-					.url((String)repo.get("tar.url"))
-					.user((String)repo.get("tar.user"))
-					.path((String)repo.get("tar.path"))
-					.passwd((String)repo.get("tar.passwd")).build().build();
+			//이력 테이블
+			Class.forName((String)repo.get("audit.drivder"));
+			SqlSessionFactory audit = MybatisSessionFactory.builder()
+					.name("audit")
+					.url((String)repo.get("audit.url"))
+					.user((String)repo.get("audit.user"))
+					.path((String)repo.get("audit.path"))
+					.passwd((String)repo.get("audit.passwd")).build().build();
 			
+
+			// 결과 테이블
 			Class.forName((String)repo.get("res.drivder"));
 			SqlSessionFactory result = MybatisSessionFactory.builder()
 					.name("result")
@@ -67,19 +59,26 @@ public class RepositoryManager {
 					.path((String)repo.get("res.path"))
 					.passwd((String)repo.get("res.passwd")).build().build();
 			
+			
+			/*
+			 * Class.forName((String)repo.get("tar.drivder")); SqlSessionFactory
+			 * target = MybatisSessionFactory.builder() .name("target")
+			 * .url((String)repo.get("tar.url")) .user((String)repo.get("tar.user"))
+			 * .path((String)repo.get("tar.path"))
+			 * .passwd((String)repo.get("tar.passwd")).build().build();
+			 * 
+			 */
 			this.factory.put("source", source);
-			this.factory.put("target", target);
+			this.factory.put("audit", audit);
 			this.factory.put("result", result);
-
 		}catch (Exception e) {
 			throw new MigrationException(e.getMessage(),e);
 		}
 		
 	}
 	
-	public <T> T getRepository(String string, Class<T> classOfT) {
-		// TODO Auto-generated method stub
-		return null;
+	public SqlSession openSession(String name) {
+		return this.factory.get(name).openSession();
 	}
 	
 }

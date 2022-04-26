@@ -1,1 +1,79 @@
 //wa-migration-daemon
+plugins {
+	id 'java'
+	id 'application'
+}
+compileJava.options.encoding = 'UTF-8'
+dependencies {
+    implementation project(":wa-migration-runtime")
+	implementation fileTree(dir: '../libs', include: ['*.jar'])
+    implementation group: 'com.sparkjava', name: 'spark-core', version: '2.8.0'
+	implementation group: 'commons-daemon', name: 'commons-daemon', version: '1.2.3'
+	implementation group: 'org.apache.commons', name: 'commons-io', version: '1.3.2'
+	implementation 		  	'org.projectlombok:lombok:1.18.16'
+	annotationProcessor 	'org.projectlombok:lombok:1.18.16'
+	testImplementation 		'org.projectlombok:lombok:1.18.12'
+}
+application {
+	mainClass='com/inzent/daemon/DaemonMain'
+}
+
+//설정파일 경로 설정
+distributions {
+	var res_path;
+	var pProjectName;
+	var module_name;
+	
+	if(project.hasProperty('prj')){
+		pProjectName = prj;			
+	} else {
+		pProjectName = 'wa-migration';
+	}
+	module_name = 'KMS_SAMPLE_01';
+	//quantum/config/stag/mig-runtime
+	res_path = pProjectName+'/conf/'+ module_name
+	println "resource path : " + res_path;			
+    main {
+        contents {
+        	distributionBaseName = 'wa-migration' + project.ext.main_ver
+        	into('config'){
+     	  		from '../conf/KMS_SAMPLE_01'
+        	}
+        	into('mapper'){
+    			from '../mapper/test/kms'
+    		}
+        }
+    }
+}
+
+startScripts {
+	def unix_start_script={line->
+		if(line.startsWith('exec')){
+			line = line.replace('exec','nohup')
+			line += ' >${MIG_LOG_PATH}/nohup.out  &'
+			line += '\n echo "$!" > ' + applicationName +'.pid'
+		}
+		return line
+	}
+	
+	doLast {
+    	unixScript.text    = unixScript.readLines().plus(23,'. ./export.sh').join('\n')
+        new File(buildDir,'scripts/startup.sh').text  = unixScript.readLines().collect(unix_start_script).join('\n')
+    }
+}
+
+tasks.register('release-' +  project.name){
+	group = "ide";
+	dependsOn(['distZip'])
+	def path = "../release/"+project.name;
+	doLast(){
+		copy{
+			from ("$project.buildDir" + "/distributions")
+			into path
+		}
+		copy{
+			from ("$project.buildDir" + "/install")
+			into path 
+		}
+	}
+}

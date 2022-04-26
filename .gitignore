@@ -5,3 +5,8 @@
 **/.settings/
 **/bin/
 conf/migration.log
+**/release
+**/*.class
+**/*.tar
+**/*.zip
+**/*.log

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="test.conf.yml.testYmlWriter" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-04-22T12:26:10" hostname="LAPTOP-O671HFNI" time="0.061">
+  <properties/>
+  <testcase name="testWriter" classname="test.conf.yml.testYmlWriter" time="0.061"/>
+  <system-out><![CDATA[21:26:10,344 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.xml]
+21:26:10,344 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.groovy]
+21:26:10,345 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Found resource [logback.xml] at [file:/C:/dev/git.rep/repo_migration/wa-migration-runtime/build/resources/main/logback.xml]
+21:26:10,418 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - Will scan for changes in [file:/C:/dev/git.rep/repo_migration/wa-migration-runtime/build/resources/main/logback.xml] 
+21:26:10,418 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - Setting ReconfigureOnChangeTask scanning period to 30 seconds
+21:26:10,423 |-ERROR in ch.qos.logback.core.joran.action.PropertyAction - Could not find properties file [system.properties_IS_UNDEFINED/system.properties].
+21:26:10,423 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+21:26:10,427 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [STDOUT]
+21:26:10,461 |-WARN in ch.qos.logback.core.ConsoleAppender[STDOUT] - This appender no longer admits a layout as a sub-component, set an encoder instead.
+21:26:10,461 |-WARN in ch.qos.logback.core.ConsoleAppender[STDOUT] - To ensure compatibility, wrapping your layout in LayoutWrappingEncoder.
+21:26:10,461 |-WARN in ch.qos.logback.core.ConsoleAppender[STDOUT] - See also http://logback.qos.ch/codes.html#layoutInsteadOfEncoder for details
+21:26:10,462 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.rolling.RollingFileAppender]
+21:26:10,465 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [APP_LOG]
+21:26:10,474 |-INFO in c.q.l.core.rolling.TimeBasedRollingPolicy@312587951 - No compression will be used
+21:26:10,475 |-INFO in c.q.l.core.rolling.TimeBasedRollingPolicy@312587951 - Will use the pattern log.path_IS_UNDEFINED/backup/migration.%d{yyyy-MM-dd}.log for the active file
+21:26:10,479 |-INFO in c.q.l.core.rolling.DefaultTimeBasedFileNamingAndTriggeringPolicy - The date pattern is 'yyyy-MM-dd' from file name pattern 'log.path_IS_UNDEFINED/backup/migration.%d{yyyy-MM-dd}.log'.
+21:26:10,479 |-INFO in c.q.l.core.rolling.DefaultTimeBasedFileNamingAndTriggeringPolicy - Roll-over at midnight.
+21:26:10,482 |-INFO in c.q.l.core.rolling.DefaultTimeBasedFileNamingAndTriggeringPolicy - Setting initial period to Fri Apr 22 21:25:25 KST 2022
+21:26:10,483 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+21:26:10,488 |-INFO in ch.qos.logback.core.rolling.RollingFileAppender[APP_LOG] - Active log file name: log.path_IS_UNDEFINED/migration.log
+21:26:10,489 |-INFO in ch.qos.logback.core.rolling.RollingFileAppender[APP_LOG] - File property is set to [log.path_IS_UNDEFINED/migration.log]
+21:26:10,490 |-INFO in ch.qos.logback.classic.joran.action.RootLoggerAction - Setting level of ROOT logger to DEBUG
+21:26:10,491 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [STDOUT] to Logger[ROOT]
+21:26:10,492 |-INFO in ch.qos.logback.classic.joran.action.LoggerAction - Setting level of logger [com.quantum] to DEBUG
+21:26:10,492 |-INFO in ch.qos.logback.classic.joran.action.LoggerAction - Setting additivity of logger [com.quantum] to false
+21:26:10,492 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [APP_LOG] to Logger[com.quantum]
+21:26:10,492 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - End of configuration.
+21:26:10,494 |-INFO in ch.qos.logback.classic.joran.JoranConfigurator@70ac3fe1 - Registering current configuration as safe fallback point
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

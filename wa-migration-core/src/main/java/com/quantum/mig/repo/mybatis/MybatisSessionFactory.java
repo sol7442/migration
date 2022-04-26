@@ -24,7 +24,6 @@ public class MybatisSessionFactory {
 	public SqlSessionFactory build() {
 		DataSource ds =  DataSourceBuilder.build(url,user,passwd);
 		Configuration config = MybatisConfigBuilder.build(name, ds);
-		
 		File mapper_path = new File(path);
 		MybatisXmlParser.parse(mapper_path, config);
 		

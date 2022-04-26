@@ -1,7 +1,7 @@
 package com.quantum.mig;
 
-import com.quantum.mig.entity.MigrationRecord;
+import com.quantum.mig.entity.MigrationAudit;
 
 public interface PrintStepHandler {
-	public void print(MigrationRecord record);
+	public void print(MigrationAudit record);
 }
