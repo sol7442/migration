@@ -33,20 +33,15 @@ distributions {
 		pProjectName = 'wa-migration';
 	}
 	//module_name 은 startup.sh 에서 파라미터로 받아주거나 ,-Dconf.path=KMS 로 설정해서 들어가야한다. 어떻게 받을지는 고민해봐야함
-	module_name = 'KMS';
-	res_path = pProjectName+'/conf/'+ module_name;
+	res_path = pProjectName+'/conf/module';
 	println "resource path : " + res_path;			
     main {
         contents {
         	distributionBaseName = 'wa-migration-runtime_' + project.ext.main_ver
         	into('conf'){
-     	  		from '../conf/module'
-     	  		from '../conf/system.properties'
-     	  		from '../conf/logback.xml'
+        		from '../conf/'
+     	  		exclude "/conf/shell"
         	}
-        	into('mapper'){
-    			from '../conf/mapper/test/'
-    		}
 			into('bin'){
 	    		from '../conf/shell'
     		}

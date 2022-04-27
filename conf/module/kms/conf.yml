@@ -5,7 +5,7 @@ out.count: 10
 
 #migByTime
 condition:
-  type: time
+  type: simul
   time.condition:
     type: time
     stime: 2022:04:15 12:00:00
