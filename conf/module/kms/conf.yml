@@ -1,9 +1,9 @@
-
+log.path : ../logs
+log.mode : debug
 class: kms
-handler : com.inzent.sh.KmsSimulMigrationHandler
+handler : com.inzent.sh.KmsMigrationHandler
 out.count: 10
 
-#migByTime
 condition:
   type: time
   time.condition:
@@ -34,6 +34,7 @@ repository:
   src.user: root
   src.passwd: oacxpwd@1
   src.path: ../conf/mapper/test/kms/src/
+  src.validation: select 1
   
   # 결과테이블
   res.drivder: org.mariadb.jdbc.Driver
@@ -41,10 +42,14 @@ repository:
   res.user: root
   res.passwd: oacxpwd@1
   res.path: ../conf/mapper/test/kms/result/
-  
+  res.validation: select 1 from dual
+    
   # 이력테이블
   audit.drivder: org.mariadb.jdbc.Driver
   audit.url: jdbc:mariadb://192.168.0.105:3306/migration
   audit.user: root
   audit.passwd: oacxpwd@1
   audit.path: ../conf/mapper/test/kms/audit/
+  audit.validation: select 1 from daul
+  
+  

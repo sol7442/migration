@@ -1,8 +1,9 @@
-class: KMS
-handler : com.inzent.sh.KmsMigrationHandler
+log.path : ../logs
+log.mode : debug
+class: appv
+handler : com.inzent.sh.AppvMigrationHandler
 out.count: 10
 
-#migByTime
 condition:
   type: simul
 time.condition:

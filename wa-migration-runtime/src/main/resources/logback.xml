@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration debug="true" scan="true" scanPeriod="30 seconds">
- 	<property file="${system.properties}/system.properties" />
+ 	<property file="${sys.path}/system.properties" />
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
       <layout class="ch.qos.logback.classic.PatternLayout">
         <pattern>[%5p] [%F]%M\(%L\) : %m%n</pattern>
@@ -23,5 +23,8 @@
     </root>
     <logger name="com.quantum" level="${log.mode}" additivity="false" >
         <appender-ref ref="APP_LOG" />
-    </logger>    
+    </logger>
+    <logger name="com.inzent" level="${log.mode}" additivity="false" >
+    	<appender-ref ref="APP_LOG" />
+    </logger>   
 </configuration>

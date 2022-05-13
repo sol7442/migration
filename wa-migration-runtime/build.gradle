@@ -33,22 +33,16 @@ distributions {
 		pProjectName = 'wa-migration';
 	}
 	//module_name 은 startup.sh 에서 파라미터로 받아주거나 ,-Dconf.path=KMS 로 설정해서 들어가야한다. 어떻게 받을지는 고민해봐야함
-	module_name = 'KMS';
-	res_path = pProjectName+'/conf/'+ module_name;
+	res_path = pProjectName+'/conf/module';
 	println "resource path : " + res_path;			
     main {
         contents {
         	distributionBaseName = 'wa-migration-runtime_' + project.ext.main_ver
         	into('conf'){
-     	  		from '../conf/module'
-     	  		from '../conf/system.properties'
-     	  		from '../conf/logback.xml'
+        		from '../conf/'
         	}
-        	into('mapper'){
-    			from '../conf/mapper/test/'
-    		}
 			into('bin'){
-	    		from '../conf/shell'
+	    		from '../shell'
     		}
         }
     }
@@ -57,8 +51,8 @@ startScripts {
 	def unix_start_script={line->
 		if(line.startsWith('exec')){
 			line = line.replace('exec','nohup')
-			line += ' >${MIG_LOG_PATH}/nohup.out  &'
-			line += '\n echo "$!" > ' + applicationName +'.pid'
+			line += ' >${WA_MIG_PATH}/logs/${MODULE_NAME}_nohup.out  &'
+			line += '\n echo "$!" > + ${MODULE_NAME} + .pid'
 		}
 		return line
 	}

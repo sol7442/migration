@@ -14,15 +14,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MigrationMain {
-	public static void main(String[] args ) {
+	public static void main(String[] args) {
 		try {
 			Map<String, Object> conf = load(args[0]);
+			log.info(" - Main Conf : {} " , conf);	
 			RepositoryManager.getInstance().connect(conf);
 			new SmartMigration(conf).start();
 		}catch (Exception e) {
 			log.error(e.getMessage(),e);
 		}finally {
-			log.info("-----------------------------------------------------------------------");	
+			log.info(" - Main Stop ----------------------------");	
 		}
 	}
 
@@ -35,7 +36,6 @@ public class MigrationMain {
 		System.setProperty("module.name" , moduleName);
 		Yaml yaml = new Yaml();
 		Map<String, Object> conf = yaml.load(new FileReader(str_builder.toString()));
-		log.info(" - Configuratin path : {}"  ,  str_builder.toString());
 		print_start_header(conf);
 
 		return conf;
@@ -52,8 +52,7 @@ public class MigrationMain {
 		log.info("========================SYSTEM PROPERTIES=============================");
 		log.info(" - System Properties Path : {}"  	,	sys_name);
 		log.info(" - Module Name : {}"		  	    ,	conf.get("class"));
-		log.info(" - Log Config  : {} / {} / {} " 	,	log_mode , log_path , log_conf);
+		log.info(" - [log Mode  : {}] / [log_path :  {}] " 	,	log_mode ,log_path);
 		log.info("=========================================================================");
-		
 	}
 }
