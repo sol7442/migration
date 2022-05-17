@@ -1,4 +1,4 @@
-package com.inzent.sh;
+package com.inzent.sh.kms.handler;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,13 +28,8 @@ public class KmsMigrationHandler implements MigrationHandler {
 	
 	public void migration(Map<String,Object> conf) throws MigrationException {
 		this.conf = conf;
-		this.steper   = loadStepPrinter(conf);
 		run();
 
-	}
-	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
-	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
-		return new ConsoleStepPrinter(100, (int)conf.get("out.count"));
 	}
 	//file , time , simul 
 	@SuppressWarnings("unchecked")
@@ -109,6 +104,7 @@ public class KmsMigrationHandler implements MigrationHandler {
 		//log 상으로 임의의 성공값으로 표기한다. 이부분에서 target 으로 성공적으로 넘어간 갯수 찍힘
 		result.setSuccessCnt(data_list.size());
 		result.setFailCnt(0);
+	
 		
 		return result;
 	}
@@ -124,13 +120,22 @@ public class KmsMigrationHandler implements MigrationHandler {
 			audit.setResult("0");
 			audit.setTime(sdf.format(new Date()));
 			log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
-			steper.print(audit);
 			auditService.record(audit);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
 		}
 	}
-
+	//migrationResult 세팅해주는 메소드 필요
+//	private void makeResult(MigrationResult result) {
+//		MigrationResult result = new MigrationResult();
+//		result.setMigClass("KMS");
+//		result.setMigType((String) condition.get("type"));
+//		result.setConfPath("test/kms");
+//		result.setTotalCnt(total_count);
+//		result.setTargetCnt(data_list.size());
+//		result.setSuccessCnt(10);
+//		result.setFailCnt(0);
+//	}
 	
 	private void storeResult(MigrationResult result) {
 		try {

@@ -104,7 +104,7 @@ public class AppvMigrationHandler implements MigrationHandler {
 			audit.setAction("0");
 			audit.setMsg("테스트");
 			audit.setTagId("TEST1");
-			audit.setResult(true);
+			audit.setResult("0");
 			audit.setTime(sdf.format(new Date()));
 			log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
 			auditService.record(audit);

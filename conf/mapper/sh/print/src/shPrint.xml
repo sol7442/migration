@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inzent.sh.print.repo.PrintSourceRepository">
+	<select id="folderCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT COUNT(1) FROM USR_FOLDER_MST
+	</select>
+	<!-- CHECK_YN = 'Y'인 폴더만 생성 -->
+	<select id="searchFolders" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="java.util.Map">
+		SELECT * 
+		FROM USR_FOLDER_MST
+		WHERE 1=1
+		AND CHECK_YN = 'Y'
+	</select>
+	<select id="readFolder" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="com.quantum.mig.entity.DefaultMigIdentity">
+		SELECT *
+		FROM USR_FOLDER_MST
+		WHERE id = #{id} 
+	</select>
+	
+	<select id="fileCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT COUNT(1) 
+		FROM OBJ_OBJECT_MST M
+		JOIN OBJ_FILE_LST F
+		ON M.OBJ_SEQ = F.OBJ_SEQ
+		JOIN OBJ_FLD_REL R
+		ON M.OBJ_SEQ = R.OBJ_SEQ
+		JOIN USR_FOLDER_MST FLD
+		ON R.FLD_SEQ = FLD.FLD_SEQ
+		WHERE M.DELETE_YN = 'N'
+	</select>
+	<!-- <select id="searchFolders" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="java.util.Map">
+		SELECT M.OBJ_SEQ
+			 , M.OBJ_NM
+			 , M.DELETE_YN
+			 , L.OBJ_FILE_SEQ 
+			 , L.ORG_FILE_NM
+			 , L.FILE_PATH
+			 , L.FILE_NM
+			 , L.REG_DT
+			 , L.REG_ID
+			 , L.UPD_ID
+			 , L.UPD_DT
+			 , FR.FLD_SEQ
+		FROM OBJ_OBJECT_MST M
+		JOIN OBJ_FILE_LST L
+		ON M.OBJ_SEQ = L.OBJ_SEQ
+		JOIN OBJ_FLD_REL FR
+		ON M.OBJ_SEQ = FR.OBJ_SEQ
+		WHERE 1=1
+		AND M.DELETE_YN = 'N'
+	</select> -->
+	<select id="searchFiles" resultType="com.inzent.sh.print.entity.PrintFile" parameterType="java.util.Map">
+		SELECT M.OBJ_SEQ
+			 , M.OBJ_NM
+			 , M.DELETE_YN
+			 , M.OWNER_USER_ID
+			 , F.OBJ_FILE_SEQ
+			 , F.ORG_FILE_NM
+			 , F.FILE_PATH
+			 , F.FILE_NM
+			 , F.REG_ID AS FILE_REG_ID
+			 , F.REG_DT AS FILE_REG_DT
+			 , F.UPD_ID AS FILE_UPD_ID
+			 , F.UPD_DT AS FILE_UPD_DT
+			 , R.FLD_SEQ
+			 , FLD.FLD_NM
+			 , FLD.PAR_FLD_SEQ
+			 , FLD.COMPANY_NAME
+			 , FLD.CHECK_YN
+			 , FLD.REG_ID AS FLD_REG_ID
+			 , FLD.REG_DT AS FLD_REG_DT
+			 , FLD.UPD_ID AS FLD_UPD_ID
+			 , FLD.UPD_DT AS FLD_UPD_DT
+			 , FLD.FLD_PATH
+		FROM OBJ_OBJECT_MST M
+		JOIN OBJ_FILE_LST F
+		ON M.OBJ_SEQ = F.OBJ_SEQ
+		JOIN OBJ_FLD_REL R
+		ON M.OBJ_SEQ = R.OBJ_SEQ
+		JOIN USR_FOLDER_MST FLD
+		ON R.FLD_SEQ = FLD.FLD_SEQ
+		WHERE M.DELETE_YN = 'N'
+	</select>
+	<select id="readFile" resultType="com.inzent.sh.print.entity.PrintFile" parameterType="com.quantum.mig.entity.DefaultMigIdentity">
+		SELECT M.OBJ_SEQ
+			 , M.OBJ_NM
+			 , M.DELETE_YN
+			 , F.OBJ_FILE_SEQ
+			 , F.ORG_FILE_NM
+			 , F.FILE_PATH
+			 , F.FILE_NM
+			 , F.REG_ID AS FILE_REG_ID
+			 , F.REG_DT AS FILE_REG_DT
+			 , F.UPD_ID AS FILE_UPD_ID
+			 , F.UPD_DT AS FILE_UPD_DT
+			 , R.FLD_SEQ
+			 , FLD.FLD_NM
+			 , FLD.PAR_FLD_SEQ
+			 , FLD.COMPANY_NAME
+			 , FLD.CHECK_YN
+			 , FLD.REG_ID AS FLD_REG_ID
+			 , FLD.REG_DT AS FLD_REG_DT
+			 , FLD.UPD_ID AS FLD_UPD_ID
+			 , FLD.UPD_DT AS FLD_UPD_DT
+			 , FLD.FLD_PATH
+		FROM OBJ_OBJECT_MST M
+		JOIN OBJ_FILE_LST F
+		ON M.OBJ_SEQ = F.OBJ_SEQ
+		JOIN OBJ_FLD_REL R
+		ON M.OBJ_SEQ = R.OBJ_SEQ
+		JOIN USR_FOLDER_MST FLD
+		ON R.FLD_SEQ = FLD.FLD_SEQ
+		WHERE M.OBJ_SEQ = #{id} 
+	</select>
+	
+	
+	
+	
+</mapper>
