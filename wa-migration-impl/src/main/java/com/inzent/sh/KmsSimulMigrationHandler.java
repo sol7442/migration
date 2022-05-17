@@ -86,8 +86,6 @@ public class KmsSimulMigrationHandler implements MigrationHandler {
 		return src.replaceAll(sep, "");
 	}
 	private MigrationResult migSimulate(Map<String, Object> condition) throws MigrationException  {
-		String str = "[e홈레저팀(홈쇼핑)/담당](☎2264/시즌/레저스포츠/골";
-		log.info(" - Simul Condition :  {} " , condition);
 		List<String[]> data_list = null;
 		int page = (int)condition.get("page");
 		int count = (int)condition.get("count");
@@ -119,10 +117,10 @@ public class KmsSimulMigrationHandler implements MigrationHandler {
 			}
 		}
 		
-		return makeResut(data_list.size());
+		return makeResult(data_list.size());
 	}
 
-	private MigrationResult makeResut(int size) {
+	private MigrationResult makeResult(int size) {
 		//결과 makeResult 함수로 빼주기
 		MigrationResult result = new MigrationResult();
 		result.setMigClass("KMS");
@@ -221,21 +219,7 @@ public class KmsSimulMigrationHandler implements MigrationHandler {
 			}
 		}
 		
-		//결과 makeResult 함수로 빼주기
-		MigrationResult result = new MigrationResult();
-		//
-		result.setMigClass("KMS");
-		result.setMigType((String) condition.get("type"));
-		result.setConfPath("test/kms");
-		result.setTotalCnt(total_count);
-		result.setTargetCnt(data_list.size());
-		//성공 : target 에 넘어갔을때 
-		//log 상으로 임의의 성공값으로 표기한다. 이부분에서 target 으로 성공적으로 넘어간 갯수 찍힘
-		result.setSuccessCnt(data_list.size());
-		result.setFailCnt(0);
-	
-		
-		return result;
+		return makeResult(data_list.size());
 	}
 	private List<String[]> MakeDummyData () {
 		

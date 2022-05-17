@@ -17,19 +17,18 @@ public class SmartMigration implements Runnable {
 		this.conf = conf;
 		//this.executor = Executors.newSingleThreadExecutor();;
 		this.handler  = loadMigrationHandler(conf);
-//		this.steper   = loadStepPrinter(conf);//new ConsoleStepPrinter(10);
+		this.steper   = loadStepPrinter(conf);//new ConsoleStepPrinter(10);
 	}
 
 	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
 	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
-		//total count는 conf 에서 구할수있는 값이 아님.
 		return new ConsoleStepPrinter(100, (int)conf.get("out.count"));
 	}
 
 	private MigrationHandler loadMigrationHandler(Map<String, Object> conf) throws MigrationException {
 		try {
 			//핸들러 메소드 호출
-			log.info("- Load Handler : {} ", (MigrationHandler) Class.forName((String) conf.get("handler")).newInstance());
+			log.info("- load handler => {} ", (MigrationHandler) Class.forName((String) conf.get("handler")).newInstance());
 			return (MigrationHandler) Class.forName((String) conf.get("handler")).newInstance();
 		} catch (ClassNotFoundException  | InstantiationException | IllegalAccessException e) {
 			throw new MigrationException(e.getMessage(),e);

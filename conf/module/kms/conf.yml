@@ -20,14 +20,7 @@ condition:
     etime: 2022:04:20 12:00:00
     page: 10
     count: 10
-repository:
-  # 사용 x
-  tar.drivder: org.mariadb.jdbc.Driver
-  tar.url: jdbc:mariadb://192.168.0.105:3306/scim
-  tar.passwd: oacxpwd@1
-  tar.user: root
-  tar.path: ../conf/mapper/test/kms/tar/
-  
+repository:  
   # 원천테이블
   src.drivder: org.mariadb.jdbc.Driver
   src.url: jdbc:mariadb://192.168.0.105:3306/migration

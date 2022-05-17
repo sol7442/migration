@@ -30,7 +30,7 @@ public class MigrationSourceService implements MigrationSourceRepository{
 	public List<MigrationSource> search(int page, int count, Map<String, Object> params) throws MigrationException {
 		try (SqlSession src_session = RepositoryManager.getInstance().openSession("source")) {
 			MigrationSourceRepository src_repo = src_session.getMapper(MigrationSourceRepository.class);
-			log.info(" -search params : {} , {} " , params.get("stime") , params.get("etime"));
+			log.info("filter : {} , {} " , params.get("stime") , params.get("etime"));
 			return src_repo.search(page, count, params);
 		}catch (Exception e) {
 			throw new MigrationException(e.getMessage(),e);
@@ -39,8 +39,12 @@ public class MigrationSourceService implements MigrationSourceRepository{
 
 	@Override
 	public Map<String, Object> read(String id) throws MigrationException  {
-		// TODO Auto-generated method stub
-		return null;
+		try (SqlSession src_session = RepositoryManager.getInstance().openSession("source")) {
+			MigrationSourceRepository src_repo = src_session.getMapper(MigrationSourceRepository.class);
+			return src_repo.read(id);
+		}catch (Exception e) {
+			throw new MigrationException(e.getMessage(),e);
+		}
 	}
 
 	@Override

@@ -19,25 +19,28 @@ repository:
   tar.url: jdbc:mariadb://192.168.0.105:3306/scim
   tar.passwd: oacxpwd@1
   tar.user: root
-  tar.path: /conf/mapper/test/kms/tar/
+  tar.path: ../conf/mapper/test/kms/tar/
   
   # 원천테이블
   src.drivder: org.mariadb.jdbc.Driver
   src.url: jdbc:mariadb://192.168.0.105:3306/migration
   src.user: root
   src.passwd: oacxpwd@1
-  src.path: /conf/mapper/test/kms/src/
+  src.path: ../conf/mapper/test/kms/src/
+  src.validation: select 1
   
   # 결과테이블
   res.drivder: org.mariadb.jdbc.Driver
   res.url: jdbc:mariadb://192.168.0.105:3306/migration
   res.user: root
   res.passwd: oacxpwd@1
-  res.path: /conf/mapper/test/kms/result/
+  res.path: ../conf/mapper/test/kms/result/
+  res.validation: select 1
   
   # 이력테이블
   audit.drivder: org.mariadb.jdbc.Driver
   audit.url: jdbc:mariadb://192.168.0.105:3306/migration
   audit.user: root
   audit.passwd: oacxpwd@1
-  audit.path: /conf/mapper/test/kms/audit/
+  audit.path: ../conf/mapper/test/kms/audit/
+  audit.validation: select 1

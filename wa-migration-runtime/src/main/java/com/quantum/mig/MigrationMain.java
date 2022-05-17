@@ -17,7 +17,8 @@ public class MigrationMain {
 	public static void main(String[] args) {
 		try {
 			Map<String, Object> conf = load(args[0]);
-			log.info(" - Main Conf : {} " , conf);	
+			log.info(" - Main Conf => {} " , conf);
+			//DB 커넥션
 			RepositoryManager.getInstance().connect(conf);
 			new SmartMigration(conf).start();
 		}catch (Exception e) {
@@ -46,13 +47,13 @@ public class MigrationMain {
 		EnvironmentManager.getInstance().load(sys_name);
 		//system.properties 에서 가져오는 걸로 수정
 		String log_mode = (String) EnvironmentManager.getInstance().get("log.mode");
-		String log_path = (String) EnvironmentManager.getInstance().get("log.path");
-		String log_conf = (String) EnvironmentManager.getInstance().get("log.conf");
+//		String log_path = (String) EnvironmentManager.getInstance().get("log.path");
+//		String log_conf = (String) EnvironmentManager.getInstance().get("log.conf");
 		
-		log.info("========================SYSTEM PROPERTIES=============================");
-		log.info(" - System Properties Path : {}"  	,	sys_name);
-		log.info(" - Module Name : {}"		  	    ,	conf.get("class"));
-		log.info(" - [log Mode  : {}] / [log_path :  {}] " 	,	log_mode ,log_path);
+		log.info("======================== SYSTEM PROPERTIES =============================");
+		log.info(" - system properties => {}"  	,	sys_name);
+		log.info(" - module name       => {}"	,	conf.get("class"));
+		log.info(" - log mode          => {}" 	,	log_mode);
 		log.info("=========================================================================");
 	}
 }
