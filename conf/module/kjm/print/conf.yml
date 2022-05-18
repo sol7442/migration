@@ -1,0 +1,48 @@
+class: PRINT
+handler : com.inzent.sh.print.handler.PrintMigrationHandler
+out.count: 10
+xe:
+  connect.url: http://54.180.132.53:8300/xedrm
+  connect.id: SUPER
+  connect.pw: SUPER 
+#migByTime
+condition:
+  type: time
+time.condition:
+  stime: 2014:04:15 12:00:00
+  etime: 2022:04:20 12:00:00
+  page: 1
+  count: 10
+file.condition:
+simul.condition:
+repository:
+  # 사용 x
+  tar.drivder: org.mariadb.jdbc.Driver
+  tar.url: jdbc:mariadb://192.168.0.105:3306/scim
+  tar.passwd: oacxpwd@1
+  tar.user: root
+  tar.path: /conf/mapper/test/kms/tar/
+  
+  # 원천테이블
+  src.drivder: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  src.url: jdbc:sqlserver://192.168.0.105:1433;database=SCIM
+  src.user: scim
+  src.passwd: scimpwd@1
+  src.path: D:/workspace_waim_mig/wa-migration/conf/mapper/sh/print/src
+  src.validation: select 1
+  
+  # 결과테이블
+  res.drivder: org.mariadb.jdbc.Driver
+  res.url: jdbc:mariadb://192.168.0.105:3306/migration
+  res.user: root
+  res.passwd: oacxpwd@1
+  res.path: /conf/mapper/test/print/result/
+  src.validation: select 1
+  
+  # 이력테이블
+  audit.drivder: org.mariadb.jdbc.Driver
+  audit.url: jdbc:mariadb://192.168.0.105:3306/migration
+  audit.user: root
+  audit.passwd: oacxpwd@1
+  audit.path: D:/workspace_waim_mig/wa-migration/conf/mapper/sh/audit
+  src.validation: select 1

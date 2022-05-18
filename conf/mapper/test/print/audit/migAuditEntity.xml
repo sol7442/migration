@@ -3,20 +3,24 @@
 <mapper namespace="mig.audit">
 	<sql id="col">
 		<![CDATA[
-		TAR_ID   ,
+		SRC_ID   ,
+		TAG_ID   ,
 		ACTION   ,
 		RESULT   , 
 		MSG      ,
-		TIME   
+		CREATOR  ,
+		TIME	 
 		]]>
 	</sql>
 	<sql id="val">
 		<![CDATA[
-		#{TAR_ID			},	
-		#{ACTION			},
-		#{RESULT			},
-		#{MSG				},	
-		#{TIME				}
+		#{srcId				},
+		#{tagId				},	
+		#{action			},
+		#{result			},
+		#{msg				},
+		'SYSMIG'			 ,	
+		CURRENT_TIMESTAMP
 		]]>
 	</sql>
 	<sql id="set">
