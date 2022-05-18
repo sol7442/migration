@@ -4,20 +4,22 @@
 	<sql id="col">
 		<![CDATA[
 		SRC_ID   ,
-		TAR_ID   ,
+		TAG_ID   ,
 		ACTION   ,
 		RESULT   , 
 		MSG      ,
+		CREATOR  ,
 		TIME	 
 		]]>
 	</sql>
 	<sql id="val">
 		<![CDATA[
-		#{SRC_ID			},
-		#{TAR_ID			},	
-		#{ACTION			},
-		#{RESULT			},
-		#{MSG				},	
+		#{srcId				},
+		#{tagId				},	
+		#{action			},
+		#{result			},
+		#{msg				},
+		'SYSMIG'			 ,	
 		CURRENT_TIMESTAMP
 		]]>
 	</sql>

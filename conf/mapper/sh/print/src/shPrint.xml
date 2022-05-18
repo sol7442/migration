@@ -50,36 +50,27 @@
 		AND M.DELETE_YN = 'N'
 	</select> -->
 	<select id="searchFiles" resultType="com.inzent.sh.print.entity.PrintFile" parameterType="java.util.Map">
-		SELECT M.OBJ_SEQ
-			 , M.OBJ_NM
-			 , M.DELETE_YN
-			 , M.OWNER_USER_ID
-			 , F.OBJ_FILE_SEQ
-			 , F.ORG_FILE_NM
-			 , F.FILE_PATH
-			 , F.FILE_NM
-			 , F.REG_ID AS FILE_REG_ID
-			 , F.REG_DT AS FILE_REG_DT
-			 , F.UPD_ID AS FILE_UPD_ID
-			 , F.UPD_DT AS FILE_UPD_DT
-			 , R.FLD_SEQ
-			 , FLD.FLD_NM
-			 , FLD.PAR_FLD_SEQ
-			 , FLD.COMPANY_NAME
-			 , FLD.CHECK_YN
-			 , FLD.REG_ID AS FLD_REG_ID
-			 , FLD.REG_DT AS FLD_REG_DT
-			 , FLD.UPD_ID AS FLD_UPD_ID
-			 , FLD.UPD_DT AS FLD_UPD_DT
-			 , FLD.FLD_PATH
-		FROM OBJ_OBJECT_MST M
-		JOIN OBJ_FILE_LST F
-		ON M.OBJ_SEQ = F.OBJ_SEQ
-		JOIN OBJ_FLD_REL R
-		ON M.OBJ_SEQ = R.OBJ_SEQ
-		JOIN USR_FOLDER_MST FLD
-		ON R.FLD_SEQ = FLD.FLD_SEQ
-		WHERE M.DELETE_YN = 'N'
+		SELECT A.rownum
+		     , A.*
+		FROM
+		(
+			SELECT ROW_NUMBER() OVER(ORDER BY T.OBJ_SEQ) AS rownum
+		    	 , T.* 
+			FROM (
+				<include refid="searchFiles_base"/>
+				<if test="stime != null">
+					AND F.UPD_DT >= #{stime}
+				</if>
+				<if test="etime != null">
+					AND F.UPD_DT <![CDATA[<=]]> #{etime}
+				</if>
+			) T
+		) A
+		WHERE A.rownum 
+		BETWEEN (CONVERT(INTEGER,#{page})-1)*(CONVERT(INTEGER,#{count})+1) 
+		AND CONVERT(INTEGER,#{page})*CONVERT(INTEGER,#{count})     
+		
+		
 	</select>
 	<select id="readFile" resultType="com.inzent.sh.print.entity.PrintFile" parameterType="com.quantum.mig.entity.DefaultMigIdentity">
 		SELECT M.OBJ_SEQ
@@ -112,8 +103,36 @@
 		ON R.FLD_SEQ = FLD.FLD_SEQ
 		WHERE M.OBJ_SEQ = #{id} 
 	</select>
-	
-	
-	
-	
+	<sql id="searchFiles_base">
+		SELECT M.OBJ_SEQ
+				 , M.OBJ_NM
+				 , M.DELETE_YN
+				 , M.OWNER_USER_ID
+				 , F.OBJ_FILE_SEQ
+				 , F.ORG_FILE_NM
+				 , F.FILE_PATH
+				 , F.FILE_NM
+				 , F.REG_ID AS FILE_REG_ID
+				 , F.REG_DT AS FILE_REG_DT
+				 , F.UPD_ID AS FILE_UPD_ID
+				 , F.UPD_DT AS FILE_UPD_DT
+				 , R.FLD_SEQ
+				 , FLD.FLD_NM
+				 , FLD.PAR_FLD_SEQ
+				 , FLD.COMPANY_NAME
+				 , FLD.CHECK_YN
+				 , FLD.REG_ID AS FLD_REG_ID
+				 , FLD.REG_DT AS FLD_REG_DT
+				 , FLD.UPD_ID AS FLD_UPD_ID
+				 , FLD.UPD_DT AS FLD_UPD_DT
+				 , FLD.FLD_PATH
+			FROM OBJ_OBJECT_MST M
+			JOIN OBJ_FILE_LST F
+			ON M.OBJ_SEQ = F.OBJ_SEQ
+			JOIN OBJ_FLD_REL R
+			ON M.OBJ_SEQ = R.OBJ_SEQ
+			JOIN USR_FOLDER_MST FLD
+			ON R.FLD_SEQ = FLD.FLD_SEQ
+			WHERE M.DELETE_YN = 'N'
+	</sql>
 </mapper>

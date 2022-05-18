@@ -42,4 +42,8 @@ public class PrintFile {
 	public String getFLD_PATH() {
 		return FLD_PATH.replaceAll(">", "/");
 	}
+	
+	public String getFileFullPath() {
+		return this.FILE_PATH+this.FILE_NM;
+	}
 }

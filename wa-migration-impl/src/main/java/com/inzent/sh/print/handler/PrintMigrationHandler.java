@@ -1,17 +1,30 @@
 package com.inzent.sh.print.handler;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilePermission;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.inzent.sh.AbstractShMigHandler;
+import com.inzent.sh.entity.FileMakeResult;
 import com.inzent.sh.print.entity.PrintFile;
 import com.inzent.sh.print.service.PrintService;
+import com.inzent.sh.util.YamlUtil;
+import com.inzent.xedrm.api.Result;
 import com.inzent.xedrm.api.XAPIException;
 import com.inzent.xedrm.api.XeConnect;
 import com.inzent.xedrm.api.XeDocument;
+import com.inzent.xedrm.api.XeElement;
+import com.inzent.xedrm.api.domain.Document;
 import com.inzent.xedrm.api.domain.Folder;
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.MigrationHandler;
@@ -26,11 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PrintMigrationHandler extends AbstractShMigHandler implements MigrationHandler {
+	private final String DEFAULT_FOLDER_PATH = "/준공도면관리/"; 
 	Map<String,Object> conf;
 	PrintStepHandler steper = null;
 	PrintService srcService = new PrintService(); //도면 source 서비스
 	MigrationAuditService auditService = new MigrationAuditService();
 	MigrationResultService resService = new MigrationResultService();
+	SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-DD hh:mm:ss.ss");
 	
 	public void migration(Map<String,Object> conf) throws MigrationException {
 		this.conf = conf;
@@ -47,8 +62,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		try {
 			switch ((String)condition.get("type")) {
 			case "time":
-				condition = (Map<String,Object>)condition.get("time.condition");
-				result = migByTime(condition);
+				result = migByTime((Map<String,Object>)this.conf.get("time.condition"));
 				break;
 			case "file":
 				condition = (Map<String,Object>)condition.get("file.condition");
@@ -64,54 +78,27 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		}catch (Exception e) {
 			//saveErrorInfo();
 		}finally {
-			//storeResult(result);
+			storeResult(result);
 		}
 	}
 	
 
 	private MigrationResult migByTime(Map<String,Object> condition) throws MigrationException {
-		log.info(" - time.condition :  {} " , condition);
-
-		List<MigrationSource> data_list = null;
 		
 		int page = (int)condition.get("page");
 		int count = (int)condition.get("count");
 		String stime = (String)condition.get("stime");
 		String etime = (String)condition.get("etime");
-		int total_count = 0;
-		int run_count = 0;
 		
 		Map<String,Object> query_param = new HashMap<String,Object>();
 		query_param.put("page", page);
 		query_param.put("count", count);
-		query_param.put("stime", makeSearchRequest(stime));
-		query_param.put("etime", makeSearchRequest(etime));
-		//조건으로 검색
-		total_count = srcService.size();
-		data_list = srcService.search(page, count, query_param);
-		log.info("- TASK COUNT  =>  :  {} " , total_count);
-		if(data_list != null) {
-			for (MigrationSource list : data_list) {
-				log.info("- TASK SEARCH => : {}" , list.toString());
-				auditRecord(total_count,list.getUSER_ID());
-				
-			}
-		}
-		//XeConnect con = new XeCon
-		//결과 makeResult 함수로 빼주기
-		MigrationResult result = new MigrationResult();
-		//
-		result.setMigClass("KMS");
-		result.setMigType((String) condition.get("type"));
-		result.setConfPath("test/kms");
-		result.setTotalCnt(total_count);
-		result.setTargetCnt(data_list.size());
-		//성공 : target 에 넘어갔을때 
-		//log 상으로 임의의 성공값으로 표기한다. 이부분에서 target 으로 성공적으로 넘어간 갯수 찍힘
-		result.setSuccessCnt(data_list.size());
-		result.setFailCnt(0);
-	
+		query_param.put("stime", YamlUtil.convertTimeFormat(stime));
+		query_param.put("etime", YamlUtil.convertTimeFormat(etime));
 		
+		condition.put("params", query_param);
+		log.info(" - time.condition :  {} " , condition);
+		MigrationResult result = this.migSimulate(condition);
 		return result;
 	}
 	
@@ -160,70 +147,53 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 	private MigrationResult migSimulate(Map<String, Object> condition) {
 		@SuppressWarnings("unchecked")
 		Map<String,Object> connectionInfo = (Map<String, Object>) this.conf.get("xe");
-		Map<String,Object> params = new HashMap<String, Object>();
+		@SuppressWarnings("unchecked")
+		Map<String,Object> params = (Map<String, Object>) condition.get("params");
+		log.info("{}",params);
 		MigrationResult result = new MigrationResult();
-		SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-DD hh:mm:ss.ss");
 		try {
 			int fileCount = srcService.fileCount();
-			//List<PrintFolder> list = srcService.searchFolders(params);
-			
-			
 			List<PrintFile> files = srcService.searchFiles(params);
 			for(PrintFile file : files) {
-				//DefaultMigIdentity fldId = DefaultMigIdentity.builder().id(String.valueOf(file.getFLD_SEQ())).build();
-				//PrintFolder fld = srcService.readFolder(fldId);
-				
-				//매번 커넥션 생성? 혹은 커넥션 재활용 가능?
-				//설정화 시킬 예정
-				//XeConnect con = new XeConnect("http://54.180.132.53:8300/xedrm", "test01","qwer1234!");
 				XeConnect con = new XeConnect(connectionInfo.get("connect.url").toString()
 						,connectionInfo.get("connect.id").toString()
 						,connectionInfo.get("connect.pw").toString());
-				//폴더 생성 호출
+				/**
+				 * 1. 폴더 생성 호출
+				 */
 				String fldPath = file.getFLD_PATH();
 				if("Y".equals(file.getCHECK_YN())){
-					Folder fldMakeResult = null;
+					Folder folder = null;
 					try {
 						//eid Shared 고정 - 전사 문서함
 						//"준공도면관리" 프로퍼티 처리?
-						fldMakeResult = super.makeFolder(con, "/준공도면관리/"+fldPath, "Shared");
-						this.recordAudit(String.valueOf(file.getFLD_SEQ()), fldMakeResult.getEid(), "CREATE", "0", "SUCCESS");
+						/**
+						 * 2. 폴더 추가 속성
+						 */
+						folder = super.makeFolder(con, DEFAULT_FOLDER_PATH+fldPath, "Shared");
+						this.updateAdditionalAttr(con, file, folder);
+						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "SUCCESS");
+						
 					} catch (XAPIException e) {
+						log.error(e.getMessage(),e);
 						//폴더 생성 결과 저장
-						this.recordAudit(String.valueOf(file.getFLD_SEQ()), fldMakeResult.getEid(), "CREATE", e.getErrorCode(), e.getMessage());
+						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.getMessage());
 					}
 					
-					 
-					
-					//audit.set
-					
-					XeDocument xd = new XeDocument(con);
-
-					/*File f = new File(file.getFILE_PATH());
-					InputStream is = new FileInputStream(f);
-
-					// xd.createDocument(업로드 대상 폴더eid, 파일, 업로드파일명, 생성자, 소유자, 생성일, 수정일,
-					// 덮어쓰기여부(false), 파일명변경여부(false));
-					Result fileMakeResult = xd.createDocument(fldMakeResult.getEid(), is, file.getORG_FILE_NM() , file.getFILE_REG_ID(), file.getOWNER_USER_ID(), format.format(file.getFILE_REG_DT()),format.format(file.getFILE_UPD_DT()),
-							false, false);*/
-					
+					FileMakeResult fileMakeResult = null;
+					try {
+						/**
+						 * 3. 파일 생성
+						 */
+						fileMakeResult = this.makeFile(con, file, folder);
+					} catch(XAPIException e) {
+						log.error(e.getMessage(),e);
+					} finally {
+						this.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg());
+						con.close();
+					}
 				} 
-				
-				
-				
-						
-				
- 
-				
-				
-				//권한 변경
-				
-				//
-				
 			}
-			
-			
-			
 			log.debug("total : {} / target : {}" , fileCount , files.size());
 			log.debug("list Detail : {}",files);
 			
@@ -245,7 +215,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
+		return result;
 	}
 	
  
@@ -258,7 +228,67 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		
 		auditService.record(audit);
 	}
-	
+
+	private Result updateAdditionalAttr(XeConnect con ,PrintFile file ,Folder folder) throws XAPIException{
+		XeElement xe = new XeElement(con);
+		Map<String, String> attrValue = new HashMap<String, String>();
+		attrValue.put("sh:ctrNm",file.getFLD_NM());
+		attrValue.put("sh:operator ",file.getCOMPANY_NAME());
+		// xe.updateAttrEx(파일 eid, map<속성명(String),속성값(String));
+		Result result = xe.updateAttrEx(folder.getEid(), attrValue);
+		return result;
+	}
+	 
+	@SuppressWarnings("unchecked")
+	private FileMakeResult makeFile(XeConnect con ,PrintFile file ,Folder folder) throws XAPIException,FileNotFoundException, IOException {
+		XeDocument xd = new XeDocument(con);
+		FileMakeResult fileMakeResult = null;
+		Result result = null;
+		File f = new File(file.getFileFullPath());
+		try(InputStream is = new FileInputStream(f)){
+			// xd.createDocument(업로드 대상 폴더eid, 파일, 업로드파일명, 생성자, 소유자, 생성일, 수정일,
+			// 덮어쓰기여부(false), 파일명변경여부(false));
+			result = xd.createDocument(folder.getEid(), is, file.getORG_FILE_NM() , file.getFILE_REG_ID(), file.getOWNER_USER_ID(), format.format(file.getFILE_REG_DT()),format.format(file.getFILE_UPD_DT()),
+					false, false);
+			if("ECM0001".equals(result.getReturnCode())) {
+				//파일 중복 에러는 특수 처리
+				//파일 검색 후 중복파일 삭제하고 처리
+				List<Document> fileList = this.searchFileWithApi(con, folder.getEid(), file.getORG_FILE_NM());
+				for(Document item : fileList) {
+					Map<String, String> param = new HashMap<String, String>();
+					
+					String eid = item.getEid();
+					LocalDateTime now = LocalDateTime.now();
+					Timestamp timestamp = Timestamp.valueOf(now);
+					
+					param.put("docId", eid);
+					param.put("description", "마이그레이션 중복 파일 삭제 - " + timestamp);
+					
+					Result updateDocResult = con.requestPost("updateDocProperty", param);
+					if(updateDocResult.isSuccess()) {
+						//Result deleteResult = this.deleteDoc(con, eid);
+						this.deleteDoc(con, eid);
+					}
+				}
+				fileMakeResult = this.makeFile(con, file, folder);
+			} else {
+				fileMakeResult = new FileMakeResult(result.getJsonObject());
+			}
+		} catch(XAPIException e) {
+			e.printStackTrace();
+			throw e;
+		} catch(FileNotFoundException e) {
+			e.printStackTrace();
+			throw e;
+		} catch(IOException e) {
+			e.printStackTrace();
+			throw e;
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+		return fileMakeResult;
+	}
 	
 	
 	private MigrationResult migByFile(Map<String,Object> condition) throws MigrationException {
@@ -274,19 +304,9 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		return result;
 	}
 
-
 	private List<String> readIdsFile() {
 		return null;
 	}
 
-	//yml date formt 20:01:01 -> 20-01-01 
-	public String makeSearchRequest(String time) {
-		StringBuffer dateForm = new StringBuffer();
-		
-		String[] searchRequest = time.split(" ");  
-		String dateStr = searchRequest[0].replaceAll(":", "-");
-		dateForm.append(dateStr+" ");
-		dateForm.append(searchRequest[1]);
-		return dateForm.toString();
-	}
+	
 }
