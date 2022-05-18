@@ -183,5 +183,5 @@ APP_ARGS=`save "$@"`
 # Collect all arguments for the java command, following the shell quoting and substitution rules
 eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $WA_MIGRATION_RUNTIME_OPTS -classpath "\"$CLASSPATH\"" com.quantum.mig.MigrationMain "$APP_ARGS"
 
-nohup "$JAVACMD" "$@" >${MIG_LOG_PATH}/nohup.out  &
- echo "$!" > wa-migration-runtime.pid
+nohup "$JAVACMD" "$@" >${WA_MIG_PATH}/logs/${MODULE_NAME}_nohup.out  &
+ echo "$!" > + ${MODULE_NAME} + .pid

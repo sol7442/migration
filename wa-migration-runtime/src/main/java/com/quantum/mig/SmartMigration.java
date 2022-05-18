@@ -17,13 +17,13 @@ public class SmartMigration implements Runnable {
 		this.conf = conf;
 		//this.executor = Executors.newSingleThreadExecutor();;
 		this.handler  = loadMigrationHandler(conf);
-		this.steper   = loadStepPrinter(conf);//new ConsoleStepPrinter(10);
+//		this.steper   = loadStepPrinter(conf);//new ConsoleStepPrinter(10);
 	}
 
-	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
-	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
-		return new ConsoleStepPrinter(100, (int)conf.get("out.count"));
-	}
+//	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
+//	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
+//		return new ConsoleStepPrinter(100, (int)conf.get("out.count"));
+//	}
 
 	private MigrationHandler loadMigrationHandler(Map<String, Object> conf) throws MigrationException {
 		try {

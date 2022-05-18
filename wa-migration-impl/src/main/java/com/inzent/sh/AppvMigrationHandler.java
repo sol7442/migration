@@ -2,6 +2,7 @@ package com.inzent.sh;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,8 @@ import com.quantum.mig.MigrationHandler;
 import com.quantum.mig.PrintStepHandler;
 import com.quantum.mig.entity.MigrationAudit;
 import com.quantum.mig.entity.MigrationResult;
+import com.quantum.mig.entity.MigrationSource;
+import com.quantum.mig.log.LOGGER;
 import com.quantum.mig.service.MigrationAuditService;
 import com.quantum.mig.service.MigrationResultService;
 import com.quantum.mig.service.MigrationSourceService;
@@ -18,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AppvMigrationHandler implements MigrationHandler {
+	int step_count=0;
 	Map<String,Object> conf;
 	PrintStepHandler steper = null;
 	MigrationSourceService srcService = new MigrationSourceService();
@@ -26,8 +30,13 @@ public class AppvMigrationHandler implements MigrationHandler {
 	
 	public void migration(Map<String,Object> conf) throws MigrationException {
 		this.conf = conf;
+		this.steper   = loadStepPrinter(conf);
 		run();
 
+	}
+	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
+	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
+		return new ConsoleStepPrinter((int)conf.get("out.count"));
 	}
 	//file , time , simul 
 	@SuppressWarnings("unchecked")
@@ -63,26 +72,36 @@ public class AppvMigrationHandler implements MigrationHandler {
 
 	private MigrationResult migByTime(Map<String,Object> condition) throws MigrationException {
 		log.info(" - time.condition :  {} " , condition);
-		return makeResult(100);
-		
 
-	}
-	private MigrationResult migByFile(Map<String,Object> condition) throws MigrationException {
-		log.info(" - file.condition :  {} " , condition);
-//		MigrationResult result = new MigrationResult();
-//		result.migType = "FILE";
-//		List<String> dis = readIdsFile();
-		return makeResult(100);
-	}
-	private MigrationResult migSimulate(Map<String, Object> condition) {
-		log.info(" - simul.condition :  {} " , condition);
-		return makeResult(100);
-	}
-	
-	
-	//결과 makeResult 함수
-	private MigrationResult makeResult(int size) {
+		List<MigrationSource> data_list = null;
 		
+		int page = (int)condition.get("page");
+		int count = (int)condition.get("count");
+		int step = (int)condition.get("step");
+		String stime = (String)condition.get("stime");
+		String etime = (String)condition.get("etime");
+		int total_count = 0;
+		
+		Map<String,Object> query_param = new HashMap<String,Object>();
+		query_param.put("page", page);
+		query_param.put("count", count);
+		query_param.put("stime", makeSearchRequest(stime));
+		query_param.put("etime", makeSearchRequest(etime));
+		//조건으로 검색
+		total_count = srcService.size();
+		data_list = srcService.search(page, count, query_param);
+		LOGGER.query.debug("- TASK COUNT  =>  :  {} " , total_count);
+		if(data_list != null) {
+			for (MigrationSource list : data_list) {
+				LOGGER.query.debug("- TASK SEARCH => : {}" , list.toString());
+				auditRecord(total_count,list.getUSER_ID(),step);
+			}
+		}
+
+		return makeResult(data_list.size());
+	}
+	
+	private MigrationResult makeResult(int size) {
 		MigrationResult result = new MigrationResult();
 		result.setMigClass("KMS");
 		result.setMigType("simul");
@@ -96,26 +115,30 @@ public class AppvMigrationHandler implements MigrationHandler {
 		return result;
 	}
 	
-	//이력 함수
-	private void auditRecord(int total , String id) {
+	private void auditRecord(int total , String id , int step) {
 		try {
 			MigrationAudit audit = new MigrationAudit(id);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
 			audit.setAction("0");
 			audit.setMsg("테스트");
 			audit.setTagId("TEST1");
-			audit.setResult("0");
+			audit.setResult(true);
 			audit.setTime(sdf.format(new Date()));
-			log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
+			LOGGER.query.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
+			if((step_count%step) == 0) {
+				steper.print(audit , total , step_count);
+			}
+			step_count++;
 			auditService.record(audit);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
 		}
 	}
+
 	
 	private void storeResult(MigrationResult result) {
 		try {
-			log.debug(" - TASK RESULT  =>   : {} " , result.toString());
+			LOGGER.query.debug(" - TASK RESULT  =>   : {} " , result.toString());
 			resService.record(result);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
@@ -126,6 +149,24 @@ public class AppvMigrationHandler implements MigrationHandler {
 		// TODO Auto-generated method stub
 		
 	}
+	private MigrationResult migSimulate(Map<String, Object> condition) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private MigrationResult migByFile(Map<String,Object> condition) throws MigrationException {
+		MigrationResult result = new MigrationResult();
+		result.migType = "FILE";
+		List<String> dis = readIdsFile();
+		/*
+		 * for (String id : dis) { Map<String,Object> data = src_repo.read(id);
+		 * 
+		 * MigrationAudit recode = handler.migration(data); steper.print(recode); //
+		 * res_repo.record(recode); audit_repo.record(recode); }
+		 */
+		return result;
+	}
+
 
 	private List<String> readIdsFile() {
 		return null;

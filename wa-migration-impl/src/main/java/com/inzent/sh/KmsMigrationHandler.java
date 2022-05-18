@@ -12,6 +12,7 @@ import com.quantum.mig.PrintStepHandler;
 import com.quantum.mig.entity.MigrationAudit;
 import com.quantum.mig.entity.MigrationResult;
 import com.quantum.mig.entity.MigrationSource;
+import com.quantum.mig.log.LOGGER;
 import com.quantum.mig.service.MigrationAuditService;
 import com.quantum.mig.service.MigrationResultService;
 import com.quantum.mig.service.MigrationSourceService;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class KmsMigrationHandler implements MigrationHandler {
+	int step_count=0;
 	Map<String,Object> conf;
 	PrintStepHandler steper = null;
 	MigrationSourceService srcService = new MigrationSourceService();
@@ -34,7 +36,7 @@ public class KmsMigrationHandler implements MigrationHandler {
 	}
 	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
 	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
-		return new ConsoleStepPrinter(100, (int)conf.get("out.count"));
+		return new ConsoleStepPrinter((int)conf.get("out.count"));
 	}
 	//file , time , simul 
 	@SuppressWarnings("unchecked")
@@ -75,10 +77,10 @@ public class KmsMigrationHandler implements MigrationHandler {
 		
 		int page = (int)condition.get("page");
 		int count = (int)condition.get("count");
+		int step = (int)condition.get("step");
 		String stime = (String)condition.get("stime");
 		String etime = (String)condition.get("etime");
 		int total_count = 0;
-		int run_count = 0;
 		
 		Map<String,Object> query_param = new HashMap<String,Object>();
 		query_param.put("page", page);
@@ -88,43 +90,45 @@ public class KmsMigrationHandler implements MigrationHandler {
 		//조건으로 검색
 		total_count = srcService.size();
 		data_list = srcService.search(page, count, query_param);
-		log.info("- TASK COUNT  =>  :  {} " , total_count);
+		LOGGER.query.debug("- TASK COUNT  =>  :  {} " , total_count);
 		if(data_list != null) {
 			for (MigrationSource list : data_list) {
-				log.info("- TASK SEARCH => : {}" , list.toString());
-				auditRecord(total_count,list.getUSER_ID());
-				
+				LOGGER.query.debug("- TASK SEARCH => : {}" , list.toString());
+				auditRecord(total_count,list.getUSER_ID(),step);
 			}
 		}
-		
-		//결과 makeResult 함수로 빼주기
+
+		return makeResult(data_list.size());
+	}
+	
+	private MigrationResult makeResult(int size) {
 		MigrationResult result = new MigrationResult();
-		//
 		result.setMigClass("KMS");
-		result.setMigType((String) condition.get("type"));
+		result.setMigType("simul");
 		result.setConfPath("test/kms");
-		result.setTotalCnt(total_count);
-		result.setTargetCnt(data_list.size());
+		result.setTotalCnt(size);
+		result.setTargetCnt(size);
 		//성공 : target 에 넘어갔을때 
 		//log 상으로 임의의 성공값으로 표기한다. 이부분에서 target 으로 성공적으로 넘어간 갯수 찍힘
-		result.setSuccessCnt(data_list.size());
+		result.setSuccessCnt(size);
 		result.setFailCnt(0);
-		
 		return result;
 	}
 	
-	
-	private void auditRecord(int total , String id) {
+	private void auditRecord(int total , String id , int step) {
 		try {
 			MigrationAudit audit = new MigrationAudit(id);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
 			audit.setAction("0");
 			audit.setMsg("테스트");
 			audit.setTagId("TEST1");
-			audit.setResult("0");
+			audit.setResult(true);
 			audit.setTime(sdf.format(new Date()));
-			log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
-			steper.print(audit);
+			LOGGER.query.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
+			if((step_count%step) == 0) {
+				steper.print(audit , total , step_count);
+			}
+			step_count++;
 			auditService.record(audit);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
@@ -134,7 +138,7 @@ public class KmsMigrationHandler implements MigrationHandler {
 	
 	private void storeResult(MigrationResult result) {
 		try {
-			log.debug(" - TASK RESULT  =>   : {} " , result.toString());
+			LOGGER.query.debug(" - TASK RESULT  =>   : {} " , result.toString());
 			resService.record(result);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
