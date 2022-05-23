@@ -1,6 +1,9 @@
 package com.inzent.sh;
 
 import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
 
 import com.inzent.xedrm.api.Result;
 import com.inzent.xedrm.api.XAPIException;
@@ -33,5 +36,44 @@ public class AbstractShMigHandler {
 	protected Result deleteDoc(XeConnect con , String eid) {
 		XeDocument xd = new XeDocument(con);
 		return xd.deleteDocument(eid);
+	}
+	/**
+	 * 권한 수정(폴더)
+	 * @param con
+	 * @param eid
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	protected Result modifyRights(XeConnect con , String eid) {
+		XeElement xe = new XeElement(con);
+		Result result = xe.getRights(eid);
+		Map jsonResult = result.getJsonObject();
+		Map security = (Map) jsonResult.get("security");
+		Map permission = (Map) jsonResult.get("permission");
+		
+		List rightListSecuritySimple = (List) security.get("rightListSimple");
+		List rightListPermissionSimple = (List) permission.get("rightListSimple");
+
+		for (JSONObject item : (List<JSONObject>) rightListPermissionSimple) {
+			String privType = String.valueOf(item.get("privType"));
+			switch(privType) {
+			case "9" :
+				item.put("templateId", "ELEMENT_OWNER");
+				break;
+			case "10" :
+				item.put("templateId", "ELEMENT_GROUP_NONE");
+				break;
+			case "11" :
+				item.put("templateId", "ELEMENT_ADMIN");
+				break;
+			case "12" :
+				item.put("templateId", "ELEMENT_OTHERS_READ");
+				break;
+			default :
+				break;
+			}
+		}
+		Result modifyRightsResult = xe.saveRightsSimple(eid, "ACL", rightListSecuritySimple, rightListPermissionSimple);
+		return modifyRightsResult;
 	}
 }

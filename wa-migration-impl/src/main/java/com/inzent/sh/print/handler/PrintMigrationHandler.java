@@ -3,7 +3,6 @@ package com.inzent.sh.print.handler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FilePermission;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
@@ -31,7 +30,6 @@ import com.quantum.mig.MigrationHandler;
 import com.quantum.mig.PrintStepHandler;
 import com.quantum.mig.entity.MigrationAudit;
 import com.quantum.mig.entity.MigrationResult;
-import com.quantum.mig.entity.MigrationSource;
 import com.quantum.mig.service.MigrationAuditService;
 import com.quantum.mig.service.MigrationResultService;
 
@@ -102,22 +100,6 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		return result;
 	}
 	
-	
-	private void auditRecord(int total , String id) {
-		try {
-			MigrationAudit audit = new MigrationAudit(id);
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-			audit.setAction("0");
-			audit.setMsg("테스트");
-			audit.setTagId("TEST1");
-			audit.setResult("0");
-			audit.setTime(sdf.format(new Date()));
-			log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
-			auditService.record(audit);
-		} catch (MigrationException e) {
-			new MigrationException(e.getMessage(),e);
-		}
-	}
 	//migrationResult 세팅해주는 메소드 필요
 //	private void makeResult(MigrationResult result) {
 //		MigrationResult result = new MigrationResult();
@@ -167,10 +149,14 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 					try {
 						//eid Shared 고정 - 전사 문서함
 						//"준공도면관리" 프로퍼티 처리?
-						/**
-						 * 2. 폴더 추가 속성
-						 */
 						folder = super.makeFolder(con, DEFAULT_FOLDER_PATH+fldPath, "Shared");
+						/**
+						 * 2. 폴더 권한 변경
+						 */
+						Result modifyRightsResult = super.modifyRights(con, folder.getEid());
+						/**
+						 * 3. 폴더 추가 속성
+						 */
 						this.updateAdditionalAttr(con, file, folder);
 						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "SUCCESS");
 						
@@ -183,7 +169,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 					FileMakeResult fileMakeResult = null;
 					try {
 						/**
-						 * 3. 파일 생성
+						 * 4. 파일 생성
 						 */
 						fileMakeResult = this.makeFile(con, file, folder);
 					} catch(XAPIException e) {
@@ -225,7 +211,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		audit.setAction(action);
 		audit.setResult(resultCd);
 		audit.setMsg(msg);
-		
+		log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
 		auditService.record(audit);
 	}
 

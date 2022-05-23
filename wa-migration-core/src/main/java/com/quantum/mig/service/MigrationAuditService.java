@@ -15,6 +15,7 @@ public class MigrationAuditService implements MigrationAuditRepository{
 		try (SqlSession src_session = RepositoryManager.getInstance().openSession("audit")) {
 			MigrationAuditRepository audit_repo = src_session.getMapper(MigrationAuditRepository.class);
 			audit_repo.record(data);
+			src_session.commit();
 		}catch (Exception e) {
 			throw new MigrationException(e.getMessage(),e);
 		}		
