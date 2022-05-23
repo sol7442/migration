@@ -10,4 +10,4 @@ conf/migration.log
 **/*.tar
 **/*.zip
 **/*.log
-*/build/*
+**/.build/
