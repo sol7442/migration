@@ -1,12 +1,11 @@
 package com.inzent.sh.test.handler;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.inzent.sh.ConsoleStepPrinter;
+import com.inzent.sh.util.YamlUtil;
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.MigrationHandler;
 import com.quantum.mig.PrintStepHandler;
@@ -23,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KmsMigrationHandler implements MigrationHandler {
 	int step_count=0;
+	int out_count = 0;
 	Map<String,Object> conf;
 	PrintStepHandler steper = null;
 	MigrationSourceService srcService = new MigrationSourceService();
@@ -37,7 +37,8 @@ public class KmsMigrationHandler implements MigrationHandler {
 	}
 	//total 값과 함께 넘기기 위해 total 값 조회하는 함수에서 호출해야함
 	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
-		return new ConsoleStepPrinter((int)conf.get("out.count"));
+		out_count = (int)conf.get("out.count");
+		return new ConsoleStepPrinter(out_count);
 	}
 	//file , time , simul 
 	@SuppressWarnings("unchecked")
@@ -78,7 +79,6 @@ public class KmsMigrationHandler implements MigrationHandler {
 		
 		int page = (int)condition.get("page");
 		int count = (int)condition.get("count");
-		int step = (int)condition.get("step");
 		String stime = (String)condition.get("stime");
 		String etime = (String)condition.get("etime");
 		int total_count = 0;
@@ -86,8 +86,8 @@ public class KmsMigrationHandler implements MigrationHandler {
 		Map<String,Object> query_param = new HashMap<String,Object>();
 		query_param.put("page", page);
 		query_param.put("count", count);
-		query_param.put("stime", makeSearchRequest(stime));
-		query_param.put("etime", makeSearchRequest(etime));
+		query_param.put("stime", YamlUtil.convertTimeFormat(stime));
+		query_param.put("etime", YamlUtil.convertTimeFormat(etime));
 		//조건으로 검색
 		total_count = srcService.size();
 		data_list = srcService.search(page, count, query_param);
@@ -95,7 +95,7 @@ public class KmsMigrationHandler implements MigrationHandler {
 		if(data_list != null) {
 			for (MigrationSource list : data_list) {
 				LOGGER.query.debug("- TASK SEARCH => : {}" , list.toString());
-				auditRecord(total_count,list.getUSER_ID(),step);
+				auditRecord(total_count,list.getUSER_ID(),out_count);
 			}
 		}
 
@@ -119,12 +119,10 @@ public class KmsMigrationHandler implements MigrationHandler {
 	private void auditRecord(int total , String id , int step) {
 		try {
 			MigrationAudit audit = new MigrationAudit(id);
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-			audit.setAction("0");
-			audit.setMsg("테스트");
-			audit.setTagId("TEST1");
-			audit.setResult("true");
-			audit.setTime(sdf.format(new Date()));
+			audit.setTAG_ID("TEST1");
+			audit.setACTION("0");
+			audit.setMSG("테스트");
+			audit.setRESULT("0");
 			LOGGER.query.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
 			if((step_count%step) == 0) {
 				steper.print(audit , total , step_count);
@@ -173,14 +171,4 @@ public class KmsMigrationHandler implements MigrationHandler {
 		return null;
 	}
 
-	//yml date formt 20:01:01 -> 20-01-01 
-	public String makeSearchRequest(String time) {
-		StringBuffer dateForm = new StringBuffer();
-		
-		String[] searchRequest = time.split(" ");  
-		String dateStr = searchRequest[0].replaceAll(":", "-");
-		dateForm.append(dateStr+" ");
-		dateForm.append(searchRequest[1]);
-		return dateForm.toString();
-	}
 }

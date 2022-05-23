@@ -1,4 +1,4 @@
-package com.inzent.sh;
+package com.inzent.sh.test.handler;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -139,11 +139,11 @@ public class KmsSimulMigrationHandler implements MigrationHandler {
 	private void auditRecord(int total , String id){
 		MigrationAudit audit = new MigrationAudit(id);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-		audit.setAction("0");
-		audit.setMsg("테스트");
-		audit.setTagId("BB11");
-		audit.setResult("0");
-		audit.setTime(sdf.format(new Date()));
+		audit.setACTION("0");
+		audit.setMSG("테스트");
+		audit.setTAG_ID("TEST1");
+		audit.setRESULT("0");
+		audit.setTIME(sdf.format(new Date()));
 		log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
 		//auditService.record(audit);
 	}

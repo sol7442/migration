@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <configuration debug="true" scan="true" scanPeriod="30 seconds">
+  <property file="${MODULE_PATH}/conf.yml" />
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
       <layout class="ch.qos.logback.classic.PatternLayout">
         <pattern>[%5p] [%F]%M\(%L\) : %m%n</pattern>
       </layout>
     </appender>
     <appender name="APP_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>../logs/migration.log</file>
+        <file>${log.path}/${class}/${class}_migration.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>../backup/migration.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/backup/${class}/${class}_migration.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -18,7 +19,7 @@
         </encoder>
     </appender>
     <appender name="QUERY_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>../logs/query.log</file>
+        <file>${log.path}/${class}/${class}_query.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>../system.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
@@ -29,7 +30,7 @@
         </encoder>
     </appender>
     <appender name="PROCESS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>../logs/process.log</file>
+        <file>${log.path}/${class}/${class}_process.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>../process.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
@@ -57,4 +58,5 @@
     <logger name="query" level="debug" additivity="false">
     	<appender-ref ref="QUERY_LOG" />
     </logger>
+	
 </configuration>
