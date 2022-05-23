@@ -11,3 +11,4 @@ conf/migration.log
 **/*.zip
 **/*.log
 **/.build/
+**/build/
