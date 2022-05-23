@@ -1,7 +1,9 @@
 package com.inzent.sh;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.json.simple.JSONObject;
 
@@ -15,6 +17,8 @@ import com.inzent.xedrm.api.domain.Document;
 import com.inzent.xedrm.api.domain.Folder;
 
 public class AbstractShMigHandler {
+	private final String randomChar = "abcdefghijklmnopqrstuvwxyz0123456789";
+	private SecureRandom random = new SecureRandom();
 	protected Folder makeFolder(XeConnect con , String path ,String eid) {
 		XeFolder xf = new XeFolder(con);
 		//xf.getOrCreateFolderByPath(폴더경로, 부모폴더eid);
@@ -75,5 +79,15 @@ public class AbstractShMigHandler {
 		}
 		Result modifyRightsResult = xe.saveRightsSimple(eid, "ACL", rightListSecuritySimple, rightListPermissionSimple);
 		return modifyRightsResult;
+	}
+	
+	protected String makeUuid() {
+		String uuid = UUID.randomUUID().toString();
+		StringBuffer sb = new StringBuffer();
+		sb.append(uuid.replaceAll("-",""));
+		for(int i = 0 ; i < 8 ; i++) {
+			sb.append(randomChar.charAt(random.nextInt(randomChar.length())));
+		}
+		return sb.toString();
 	}
 }

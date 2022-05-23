@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.inzent.sh.AbstractShMigHandler;
+import com.inzent.sh.ConsoleStepPrinter;
 import com.inzent.sh.entity.FileMakeResult;
 import com.inzent.sh.print.entity.PrintFile;
 import com.inzent.sh.print.service.PrintService;
@@ -38,6 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrintMigrationHandler extends AbstractShMigHandler implements MigrationHandler {
 	private final String DEFAULT_FOLDER_PATH = "/준공도면관리/"; 
+	private String auditSeq = null;
+	int step_count = 0 ; 
+	int out_count = 0;
 	Map<String,Object> conf;
 	PrintStepHandler steper = null;
 	PrintService srcService = new PrintService(); //도면 source 서비스
@@ -47,8 +51,15 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 	
 	public void migration(Map<String,Object> conf) throws MigrationException {
 		this.conf = conf;
+		this.steper = loadStepPrinter(conf);
+		this.auditSeq = super.makeUuid();
 		run();
 
+	}
+	
+	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
+		out_count = (int)conf.get("out.count");
+		return new ConsoleStepPrinter(out_count);
 	}
 	//file , time , simul 
 	@SuppressWarnings("unchecked")
@@ -175,7 +186,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 					} catch(XAPIException e) {
 						log.error(e.getMessage(),e);
 					} finally {
-						this.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg());
+						this.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),out_count,files.size());
 						con.close();
 					}
 				} 
@@ -205,14 +216,31 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 	}
 	
  
-	private void recordAudit(String srcId , String tarId , String action , String resultCd , String msg) throws MigrationException {
-		MigrationAudit audit = new MigrationAudit(srcId);
-		audit.setTagId(tarId);
-		audit.setAction(action);
-		audit.setResult(resultCd);
-		audit.setMsg(msg);
+	private void recordAudit(String srcId , String tagId , String action , String resultCd , String msg,int step,int total) throws MigrationException {
+		MigrationAudit audit = this.makeDefaultAudit(srcId, tagId, action, resultCd, msg);
+		log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
+		if((step_count%step) == 0) {
+			steper.print(audit , total , step_count);
+		}
+		step_count++;
+		auditService.record(audit);
+	}
+	
+
+	private void recordAudit(String srcId , String tagId , String action , String resultCd , String msg) throws MigrationException {
+		MigrationAudit audit = this.makeDefaultAudit(srcId, tagId, action, resultCd, msg);
 		log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
 		auditService.record(audit);
+	}
+	
+	private MigrationAudit makeDefaultAudit(String srcId , String tagId , String action , String resultCd , String msg) {
+		MigrationAudit audit = new MigrationAudit(srcId);
+		audit.setTAG_ID(tagId);
+		audit.setACTION(action);
+		audit.setRESULT(resultCd);
+		audit.setMSG(msg);
+		audit.setSEQ_VALUE(this.auditSeq);
+		return audit;
 	}
 
 	private Result updateAdditionalAttr(XeConnect con ,PrintFile file ,Folder folder) throws XAPIException{
