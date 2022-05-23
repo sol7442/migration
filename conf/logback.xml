@@ -21,7 +21,7 @@
     <appender name="QUERY_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log.path}/${class}/${class}_query.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>../system.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/backup/${class}/${class}_query.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -32,7 +32,7 @@
     <appender name="PROCESS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log.path}/${class}/${class}_process.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>../process.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/backup/${class}/${class}_process.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
