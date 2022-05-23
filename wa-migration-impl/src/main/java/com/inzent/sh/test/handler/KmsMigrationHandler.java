@@ -1,4 +1,4 @@
-package com.inzent.sh;
+package com.inzent.sh.test.handler;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.inzent.sh.ConsoleStepPrinter;
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.MigrationHandler;
 import com.quantum.mig.PrintStepHandler;
@@ -122,7 +123,7 @@ public class KmsMigrationHandler implements MigrationHandler {
 			audit.setAction("0");
 			audit.setMsg("테스트");
 			audit.setTagId("TEST1");
-			audit.setResult(true);
+			audit.setResult("true");
 			audit.setTime(sdf.format(new Date()));
 			LOGGER.query.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
 			if((step_count%step) == 0) {
