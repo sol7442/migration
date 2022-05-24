@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
-import com.quantum.mig.manager.EnvironmentManager;
 import com.quantum.mig.repo.RepositoryManager;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,22 +37,16 @@ public class MigrationMain {
 		Yaml yaml = new Yaml();
 		Map<String, Object> conf = yaml.load(new FileReader(str_builder.toString()));
 		print_start_header(conf);
-
 		return conf;
 	}
 	
+
 	private static void print_start_header(Map<String, Object> conf) throws Exception {
-		String sys_name = System.getProperty("system.properties");
-		EnvironmentManager.getInstance().load(sys_name);
-		//system.properties 에서 가져오는 걸로 수정
-		String log_mode = (String) EnvironmentManager.getInstance().get("log.mode");
-//		String log_path = (String) EnvironmentManager.getInstance().get("log.path");
-//		String log_conf = (String) EnvironmentManager.getInstance().get("log.conf");
 		
 		log.info("======================== SYSTEM PROPERTIES =============================");
-		log.info(" - system properties => {}"  	,	sys_name);
-		log.info(" - module name       => {}"	,	conf.get("class"));
-		log.info(" - log mode          => {}" 	,	log_mode);
+		log.info("MODULE_NAME       : {} "	 , conf.get("class"));
+		log.info("MODULE HANDLER    : {} "   , conf.get("handler"));
+		log.info("LOGGER ({})       : {} "   , conf.get("log.mode"), conf.get("log.path"));
 		log.info("=========================================================================");
 	}
 }

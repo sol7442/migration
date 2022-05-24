@@ -7,8 +7,6 @@ import java.io.FileNotFoundException;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.session.Configuration;
 
-import com.quantum.mig.manager.EnvironmentManager;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
