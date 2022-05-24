@@ -6,4 +6,4 @@ echo kill process : $PROCESS_ID
 
 #kill -15 $PROCESS_ID
 
-rm "$MODULE_NAME".pid
+rm "$MODULE_NAME".pid 

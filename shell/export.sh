@@ -14,7 +14,7 @@ else
     *) echo "Invalid module name - {kms , appv , print}"
     exit ;;
     esac
-fi
+fi 
 
 WA_MIG_PATH=`dirname $PWD`
 WA_SYS_PATH="${WA_MIG_PATH}/conf"
