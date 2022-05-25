@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -29,58 +30,24 @@ public class RepositoryManager {
 	@SuppressWarnings("unchecked")
 	public void connect(Map<String, Object> conf) throws MigrationException {
 		try {
-			Map<String,Object> repo = (Map<String, Object>) conf.get("repository");
+			Map<String,Map<String,String>> repo = (Map<String, Map<String,String>>) conf.get("repository");
 			log.info("- Loading Repository => {} " , repo );
-			//소스 테이블
-			Class.forName((String)repo.get("src.drivder"));
-			SqlSessionFactory source = MybatisSessionFactory.builder()
-				.name("source")
-				.url((String)repo.get("src.url"))
-				.user((String)repo.get("src.user"))
-				.passwd((String)repo.get("src.passwd"))
-				.path((String)repo.get("src.path"))
-				.validation((String)repo.get("src.validation"))
-				.build().build();
-			
-			//이력 테이블
-			Class.forName((String)repo.get("audit.drivder"));
-			SqlSessionFactory audit = MybatisSessionFactory.builder()
-					.name("audit")
-					.url((String)repo.get("audit.url"))
-					.user((String)repo.get("audit.user"))
-					.path((String)repo.get("audit.path"))
-					.passwd((String)repo.get("audit.passwd"))
-					.validation((String)repo.get("audit.validation"))
-					.build().build();
-			
-
-			// 결과 테이블
-			Class.forName((String)repo.get("res.drivder"));
-			SqlSessionFactory result = MybatisSessionFactory.builder()
-					.name("result")
-					.url((String)repo.get("res.url"))
-					.user((String)repo.get("res.user"))
-					.path((String)repo.get("res.path"))
-					.passwd((String)repo.get("res.passwd"))
-					.validation((String)repo.get("res.validation"))
-					.build().build();
-			
-			
-			/*
-			 * Class.forName((String)repo.get("tar.drivder")); SqlSessionFactory
-			 * target = MybatisSessionFactory.builder() .name("target")
-			 * .url((String)repo.get("tar.url")) .user((String)repo.get("tar.user"))
-			 * .path((String)repo.get("tar.path"))
-			 * .passwd((String)repo.get("tar.passwd")).build().build();
-			 * 
-			 */
-
-			this.factory.put("source", source);
-			this.factory.put("audit", audit);
-			this.factory.put("result", result);
-			
-			sessionTest((String)repo.get("src.validation"), factory );
-		}catch (Exception e) {
+			Set<String> keySet = repo.keySet();
+			for(String key : keySet) {
+				Map<String,String> dsInfo = (Map<String, String>) repo.get(key);
+				Class.forName(dsInfo.get("driver"));
+				SqlSessionFactory dataSource = MybatisSessionFactory.builder()
+														.name(key)
+														.url(dsInfo.get("url"))
+														.user(dsInfo.get("user"))
+														.passwd(dsInfo.get("passwd"))
+														.path(dsInfo.get("path"))
+														.validation(dsInfo.get("validation"))
+														.build().build();
+				this.factory.put(key, dataSource);
+				sessionTest(key,dsInfo.get("validation"));
+			}
+		} catch (Exception e) {
 			throw new MigrationException(e.getMessage(),e);
 		}
 		
@@ -98,19 +65,15 @@ public class RepositoryManager {
 		return session;
 	}
 	
-	public boolean sessionTest(String validation , Map<String,SqlSessionFactory> factory) throws MigrationException {
+	public boolean sessionTest(String sourceName,String validation) throws MigrationException {
 		boolean validation_result = false;
-		Iterator<String> keys = factory.keySet().iterator();
-		while (keys.hasNext() ) {
-			String source_name = keys.next();
-			try (SqlSession session =  RepositoryManager.getInstance().openSession(source_name)){
-				Connection connection = session.getConnection();
-				validation_result = connection.prepareStatement(validation).execute();
-			}catch (Exception e) {
-				throw new MigrationException(e.getMessage(),e);
-			}finally {
-				log.info("{} => {} : {} " , source_name, validation_result , validation);
-			}
+		try (SqlSession session =  RepositoryManager.getInstance().openSession(sourceName)){
+			Connection connection = session.getConnection();
+			validation_result = connection.prepareStatement(validation).execute();
+		}catch (Exception e) {
+			throw new MigrationException(e.getMessage(),e);
+		}finally {
+			log.info("{} => {} : {} " , sourceName, validation_result , validation);
 		}
 		return validation_result;
 	}

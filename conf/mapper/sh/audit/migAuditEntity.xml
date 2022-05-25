@@ -22,7 +22,7 @@
 		#{RESULT			},
 		#{MSG				},
 		'SYSMIG'			 ,	
-		CURRENT_TIMESTAMP
+		#{TIME				}
 		]]>
 	</sql>
 	<sql id="set">

@@ -6,8 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrintMigrationHandler extends AbstractShMigHandler implements MigrationHandler {
 	private final String DEFAULT_FOLDER_PATH = "/준공도면관리/"; 
-	private String auditSeq = null;
 	int step_count = 0 ; 
 	int out_count = 0;
 	Map<String,Object> conf;
@@ -52,9 +54,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 	public void migration(Map<String,Object> conf) throws MigrationException {
 		this.conf = conf;
 		this.steper = loadStepPrinter(conf);
-		this.auditSeq = super.makeUuid();
 		run();
-
 	}
 	
 	private PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
@@ -169,12 +169,12 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 						 * 3. 폴더 추가 속성
 						 */
 						this.updateAdditionalAttr(con, file, folder);
-						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "SUCCESS");
+						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "Success");
 						
 					} catch (XAPIException e) {
 						log.error(e.getMessage(),e);
 						//폴더 생성 결과 저장
-						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.getMessage());
+						this.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.toString());
 					}
 					
 					FileMakeResult fileMakeResult = null;
@@ -184,6 +184,8 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 						 */
 						fileMakeResult = this.makeFile(con, file, folder);
 					} catch(XAPIException e) {
+						log.error(e.getMessage(),e);
+					} catch (Exception e) {
 						log.error(e.getMessage(),e);
 					} finally {
 						this.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),out_count,files.size());
@@ -208,8 +210,10 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 			
 		} catch (MigrationException e) {
 			// TODO Auto-generated catch block
+			log.error(e.getMessage(),e);
 			e.printStackTrace();
 		} catch (Exception e) {
+			log.error(e.getMessage(),e);
 			e.printStackTrace();
 		}
 		return result;
@@ -239,7 +243,9 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		audit.setACTION(action);
 		audit.setRESULT(resultCd);
 		audit.setMSG(msg);
-		audit.setSEQ_VALUE(this.auditSeq);
+		audit.setSEQ_VALUE(super.makeUuid());
+		LocalDateTime now = LocalDateTime.now();
+		audit.setTIME(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 		return audit;
 	}
 
@@ -254,7 +260,7 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 	}
 	 
 	@SuppressWarnings("unchecked")
-	private FileMakeResult makeFile(XeConnect con ,PrintFile file ,Folder folder) throws XAPIException,FileNotFoundException, IOException {
+	private FileMakeResult makeFile(XeConnect con ,PrintFile file ,Folder folder) throws Exception {
 		XeDocument xd = new XeDocument(con);
 		FileMakeResult fileMakeResult = null;
 		Result result = null;
@@ -262,8 +268,11 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 		try(InputStream is = new FileInputStream(f)){
 			// xd.createDocument(업로드 대상 폴더eid, 파일, 업로드파일명, 생성자, 소유자, 생성일, 수정일,
 			// 덮어쓰기여부(false), 파일명변경여부(false));
-			result = xd.createDocument(folder.getEid(), is, file.getORG_FILE_NM() , file.getFILE_REG_ID(), file.getOWNER_USER_ID(), format.format(file.getFILE_REG_DT()),format.format(file.getFILE_UPD_DT()),
-					false, false);
+			result = xd.createDocument(folder.getEid(), is, file.getORG_FILE_NM() , file.getFILE_REG_ID()
+									 , file.getOWNER_USER_ID()
+									 , format.format(file.getFILE_REG_DT())
+									 , format.format(file.getFILE_UPD_DT())
+									 , false, false);
 			if("ECM0001".equals(result.getReturnCode())) {
 				//파일 중복 에러는 특수 처리
 				//파일 검색 후 중복파일 삭제하고 처리
@@ -289,16 +298,12 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 				fileMakeResult = new FileMakeResult(result.getJsonObject());
 			}
 		} catch(XAPIException e) {
-			e.printStackTrace();
 			throw e;
 		} catch(FileNotFoundException e) {
-			e.printStackTrace();
 			throw e;
 		} catch(IOException e) {
-			e.printStackTrace();
 			throw e;
 		} catch(Exception e) {
-			e.printStackTrace();
 			throw e;
 		}
 		return fileMakeResult;
@@ -321,6 +326,6 @@ public class PrintMigrationHandler extends AbstractShMigHandler implements Migra
 	private List<String> readIdsFile() {
 		return null;
 	}
-
+	
 	
 }
