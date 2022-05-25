@@ -7,9 +7,9 @@
       </layout>
     </appender>
     <appender name="APP_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>../logs/migration.log</file>
+        <file>${log.path}/migration.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>../logs/backup/migration.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/backup/migration.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -18,9 +18,9 @@
         </encoder>
     </appender>
     <appender name="QUERY_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>../logs/query.log</file>
+        <file>${log.path}/query.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>../logs/backup/query.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/backup/query.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -29,9 +29,9 @@
         </encoder>
     </appender>
     <appender name="PROCESS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>../logs/process.log</file>
+        <file>${log.path}/process.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>../logs/backup/process.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/backup/process.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -39,22 +39,23 @@
             <pattern>%d{HH:mm:ss.SSS} | %-5level | %-32.32C{30} | %-32M\(%L\) | %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="debug" additivity="false">
+    <root level="${log.mode}" additivity="false">
        <appender-ref ref="STDOUT" />
     </root>
-    <logger name="com.quantum" level="debug" additivity="false">
+    <logger name="com.quantum" level="${log.mode}" additivity="false">
     	<appender-ref ref="STDOUT" />
     </logger>
-    <logger name="com.quantum" level="debug}" additivity="false" >
+    <logger name="com.quantum" level="${log.mode}" additivity="false" >
         <appender-ref ref="APP_LOG" />
     </logger>
-    <logger name="com.inzent" level="debug" additivity="false" >
+    <logger name="com.inzent" level="${log.mode}" additivity="false" >
     	<appender-ref ref="APP_LOG" />
     </logger>
-   <logger name="process" level="debug" additivity="false" >
+   <logger name="process" level="${log.mode}" additivity="false" >
         <appender-ref ref="PROCESS_LOG" />
     </logger>
-    <logger name="query" level="debug" additivity="false">
+    <logger name="query" level="${log.mode}" additivity="false">
     	<appender-ref ref="QUERY_LOG" />
     </logger>
+	
 </configuration>

@@ -39,14 +39,13 @@ public class MigrationMain {
 		print_start_header(conf);
 		return conf;
 	}
-	
 
 	private static void print_start_header(Map<String, Object> conf) throws Exception {
-		
 		log.info("======================== SYSTEM PROPERTIES =============================");
 		log.info("MODULE_NAME       : {} "	 , conf.get("class"));
 		log.info("MODULE HANDLER    : {} "   , conf.get("handler"));
-		log.info("LOGGER ({})       : {} "   , conf.get("log.mode"), conf.get("log.path"));
+		log.info("MODULE CONF       : {} "   , conf.get("name")); //삭제 예정
+		log.info("LOGGER ({})       : {} "   , System.getProperty("log.mode") , System.getProperty("log.path"));
 		log.info("=========================================================================");
 	}
 }

@@ -16,14 +16,20 @@ else
     esac
 fi
 
+
 WA_MIG_PATH=`dirname $PWD`
 WA_SYS_PATH="${WA_MIG_PATH}/conf"
 WA_CONF_PATH="${WA_SYS_PATH}/module"
 MODULE_PATH="${WA_CONF_PATH}/${MODULE_NAME}"
 WA_MIG_LOG_FILE="${WA_SYS_PATH}/logback.xml"
-WA_MIGRATION_RUNTIME_OPTS="-Dsys.path=${WA_SYS_PATH} -Dconf.path=${WA_CONF_PATH} -Dlogback.configurationFile=${WA_MIG_LOG_FILE}"
+WA_MIG_LOG_PATH="${WA_MIG_PATH}/logs/${MODULE_NAME}"
+WA_MIG_LOG_MODE="debug"
+WA_MIGRATION_RUNTIME_OPTS="-Dsys.path=${WA_SYS_PATH} -Dconf.path=${WA_CONF_PATH} -Dlogback.configurationFile=${WA_MIG_LOG_FILE} -Dlog.path=${WA_MIG_LOG_PATH} -Dlog.mode=${WA_MIG_LOG_MODE}"
 JAVA_OPTS="-Xms128m -Xmx1024m"
 JAVA_HOME="/home/im/jdk-8u302-ojdkbuild-linux-x64"
+
+
+
 
 echo "WA_MIG_PATH        : ${WA_MIG_PATH}"
 echo "WA_SYS_PATH        : ${WA_SYS_PATH}"
@@ -32,6 +38,9 @@ echo "MODULE_PATH        : ${MODULE_PATH}"
 echo "WA_MIG_LOG_FILE    : ${WA_MIG_LOG_FILE}"
 echo "WA_MIGRATION_RUNTIME_OPTS : ${WA_MIGRATION_RUNTIME_OPTS}"
 echo "JAVA_HOME          : ${JAVA_HOME}"
+echo "WA_MIG_LOG_PATH    : ${WA_MIG_LOG_PATH}"
+echo "WA_MIG_LOG_MODE    : ${WA_MIG_LOG_MODE}"
+
 
 
 export WA_MIG_PATH
@@ -41,3 +50,5 @@ export MODULE_PATH
 export WA_MIG_LOG_FILE
 export WA_MIG_SERVER_OPTS
 export JAVA_HOME
+export WA_MIG_LOG_PATH
+export WA_MIG_LOG_MODE
