@@ -1,6 +1,28 @@
+@echo off
 set MODULE_NAME=%1%
-echo %MODULE_NAME%
 
+
+if "%1%"=="" (
+	echo "Usage : {kms|appv|print}"
+	exit
+) else (
+	if "%MODULE_NAME%" == "kms" ( 
+	echo module name : %MODULE_NAME%
+	goto set_val
+	) else if "%MODULE_NAME%" == "appv" ( 
+	echo module name : %MODULE_NAME%
+	goto set_val
+	) else if "%MODULE_NAME%" == "print" (
+	echo module name : %MODULE_NAME%
+	goto set_val
+	) else (
+		echo "Usage : {kms|appv|print}"
+		exit
+	)
+	
+
+)
+:set_val
 
 set currDir=%cd%
 cd ..
