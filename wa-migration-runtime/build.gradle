@@ -66,6 +66,17 @@ startScripts {
     }
 }
 
+startScripts {
+	def windows_start_script={line->
+		return line
+	}
+
+	doLast {
+    	windowsScript.text    = windowsScript.readLines().plus(23,'call export.bat %1').join('\n')
+        new File(buildDir,'scripts/startup.bat').text  = windowsScript.readLines().collect(windows_start_script).join('\n')
+    }
+}
+
 tasks.register('release-' +  project.name){
 	group = "ide";
 	dependsOn('build')

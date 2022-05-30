@@ -11,8 +11,11 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.codehaus.janino.Java.ThisReference;
+import org.slf4j.Logger;
 
 import com.quantum.mig.MigrationException;
+import com.quantum.mig.log.LOGGER;
 import com.quantum.mig.repo.DataSourceBuilder;
 import com.quantum.mig.repo.RepositoryManager;
 import com.quantum.mig.service.MigrationResultService;
@@ -33,28 +36,23 @@ public class MybatisSessionFactory {
 	String path;
 	String validation;
 	
+	static String xml_full_path = null;
 	public SqlSessionFactory build() throws MigrationException {
 		DataSource ds =  DataSourceBuilder.build(url,user,passwd);
 		Configuration config = MybatisConfigBuilder.build(name, ds);
-		File mapper_path = new File(path);
+		getXmlpath(path);
+		File mapper_path = new File(xml_full_path);
 		MybatisXmlParser.parse(mapper_path, config);
 		return new SqlSessionFactoryBuilder().build(config);		
 	}
-	
-	public boolean sessionTest() throws MigrationException {
-		boolean validation_result = false;
 
-		try (SqlSession session = factory.openSession() ){
-			Connection connection = session.getConnection();
-			validation_result = connection.prepareStatement(validation).execute();
-		}catch (Exception e) {
-			throw new MigrationException(e.getMessage(),e);
-		}finally {
-			log.info("=======================JDBC : {} : {} " ,  validation_result , validation);
+	public static String getXmlpath (String path) {
+		if(System.getProperty("mig.home") != null) {
+			xml_full_path = System.getProperty("mig.home") + path; 
+			return xml_full_path;
+		}else {
+			xml_full_path = System.getProperty("user.dir") + path;
+			return xml_full_path;
 		}
-
-		return validation_result;
 	}
-	
-
 }
