@@ -24,7 +24,7 @@ MODULE_PATH="${WA_CONF_PATH}/${MODULE_NAME}"
 WA_MIG_LOG_FILE="${WA_SYS_PATH}/logback.xml"
 WA_MIG_LOG_PATH="${WA_MIG_PATH}/logs/${MODULE_NAME}"
 WA_MIG_LOG_MODE="debug"
-WA_MIGRATION_RUNTIME_OPTS="-Dsys.path=${WA_SYS_PATH} -Dconf.path=${WA_CONF_PATH} -Dlogback.configurationFile=${WA_MIG_LOG_FILE} -Dlog.path=${WA_MIG_LOG_PATH} -Dlog.mode=${WA_MIG_LOG_MODE}"
+WA_MIGRATION_RUNTIME_OPTS="-Dsys.path=${WA_SYS_PATH} -Dconf.path=${WA_CONF_PATH} -Dlogback.configurationFile=${WA_MIG_LOG_FILE} -Dlog.path=${WA_MIG_LOG_PATH} -Dlog.mode=${WA_MIG_LOG_MODE} -Dmig.home=${WA_MIG_PATH}"
 JAVA_OPTS="-Xms128m -Xmx1024m"
 JAVA_HOME="/home/im/jdk-8u302-ojdkbuild-linux-x64"
 
