@@ -2,10 +2,13 @@ package com.inzent.sh.print.entity;
 
 import java.util.Date;
 
+import com.inzent.sh.entity.ShFile;
+
 import lombok.Data;
 
 @Data
-public class PrintFile {
+public class PrintFile implements ShFile {
+	
 	//OBJ_OBJECT_MST
 	private int OBJ_SEQ;
 	private String OBJ_NM;
@@ -43,7 +46,43 @@ public class PrintFile {
 		return FLD_PATH.replaceAll(">", "/");
 	}
 	
-	public String getFileFullPath() {
+	private String getFileFullPath() {
 		return this.FILE_PATH+this.FILE_NM;
+	}
+
+	@Override
+	public String getPath() {
+		// TODO Auto-generated method stub
+		return this.getFileFullPath();
+	}
+
+	@Override
+	public String getFileName() {
+		// TODO Auto-generated method stub
+		return this.ORG_FILE_NM;
+	}
+
+	@Override
+	public String getRegister() {
+		// TODO Auto-generated method stub
+		return this.FILE_REG_ID;
+	}
+
+	@Override
+	public String getOwner() {
+		// TODO Auto-generated method stub
+		return this.OWNER_USER_ID;
+	}
+
+	@Override
+	public String getRegistDate() {
+		// TODO Auto-generated method stub
+		return FILE_DATE_FORMAT.format(this.FILE_REG_DT);
+	}
+
+	@Override
+	public String getModifyDate() {
+		// TODO Auto-generated method stub
+		return FILE_DATE_FORMAT.format(this.FILE_UPD_DT);
 	}
 }

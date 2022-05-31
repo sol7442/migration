@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inzent.sh.print.repo.PrintSourceRepository">
+	<select id="fileCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+	</select>
+	<select id="searchFiles" resultType="com.inzent.sh.print.entity.PrintFile" parameterType="java.util.Map">
+		SELECT *
+		FROM
+		(
+			SELECT ROWNUM AS NUM , INNER_SQL.* 
+			FROM (
+				<include refid="searchFiles_base"/>
+				<if test="stime != null">
+					AND F.UPDATE_DATE >= #{stime}
+				</if>
+				<if test="etime != null">
+					AND F.UPDATE_DATE <![CDATA[<=]]> #{etime}
+				</if>
+			) INNER_SQL 
+			WHERE 1=1
+			<if test="page != null and count != null">
+			AND ROWNUM <![CDATA[<=]]> ((#{page}-1)*#{count}+1)
+			AND ROWNUM <![CDATA[>]]> (#{page})*#{count})
+			</if>
+		)			
+	</select>
+	<select id="searchPersonsFromPrgrHist" resultType="com.inzent.sh.aprv.entity.AprvPerson" parameterType="com.inzent.sh.aprv.entity.AprvFile" >
+		SELECT APH.APRV_SEQ
+		     , APH.DECIDER_EMP_NO
+		     , APH.CREATE_USER
+		FROM TNZZE_FORM_APRV_PRGR_HIST APH
+		WHERE APH.APRV_SEQ = #{APRV_SEQ}
+	</select>
+	<select id="searchPersonsFromHist" resultType="com.inzent.sh.aprv.entity.AprvPerson" parameterType="com.inzent.sh.aprv.entity.AprvFile" >
+		SELECT AH.APRV_SEQ
+		     , AH.PUB_INSPT_PRSN_EMP_NO
+		FROM TNZZE_FORM_APRV_HIST AH
+		WHERE AH.APRV_SEQ = #{APRV_SEQ}
+	</select>
+	<sql id="searchFiles_base">
+		SELECT F.APRV_SEQ
+		     , F.FILE_ID
+		     , F.CREATE_USER
+		     , F.CREATE_DATE
+		     , F.UPDATE_DATE
+		     , AF.PHY_SAVE_PATH_NM 
+		     , AF.FILE_NM
+		     , H.CREATE_USER AS CREATE_USER_HIST
+		FROM TNZZE_FORM_APRV_EVID_FILE F
+		JOIN TNZZA_ADDFILE AF
+		ON F.FILE_ID = AF.FILE_ID
+		JOIN TNZZE_FORM_APRV_HIST H
+		ON F.APRV_SEQ = H.APRV_SEQ
+		WHERE F.FILE_ID IS NOT NULL
+	</sql>
+</mapper>
