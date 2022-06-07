@@ -107,14 +107,15 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		List<PrintFile> files = srcService.searchFiles(params);
 		for(PrintFile file : files) {
 			try {
-				XeConnect con = super.getConnection(this.conf);
 				/**
 				 * 1. 폴더 생성 호출
 				 */
 				String fldPath = file.getFLD_PATH();
 				if("Y".equals(file.getCHECK_YN())){
 					Folder folder = null;
+					XeConnect con = null;
 					try {
+						con = super.getConnection(this.conf);
 						//eid Shared 고정 - 전사 문서함
 						//"준공도면관리" 프로퍼티 처리?
 						folder = super.makeFolder(con, DEFAULT_FOLDER_PATH+fldPath, "Shared");
@@ -132,7 +133,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 						log.error(e.getMessage(),e);
 						//폴더 생성 결과 저장
 						super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.toString());
-					}
+					} 
 					
 					FileMakeResult fileMakeResult = null;
 					try {
@@ -146,7 +147,9 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 						log.error(e.getMessage(),e);
 					} finally {
 						super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),out_count,files.size());
-						con.close();
+						if(con != null) {
+							con.close();
+						}
 					}
 				} 
 			} catch (MigrationException e) {
@@ -159,7 +162,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 			}
 		}
 		log.debug("total : {} / target : {}" , fileCount , files.size());
-		log.debug("list Detail : {}",files);
+		log.trace("list Detail : {}",files);
 		
 		//미사용
 		result.setMigClass("PRINT");

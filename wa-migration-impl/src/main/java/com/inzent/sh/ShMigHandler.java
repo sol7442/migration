@@ -233,7 +233,9 @@ public class ShMigHandler {
 			if("ECM0001".equals(result.getReturnCode())) {
 				//파일 중복 에러는 특수 처리
 				//파일 검색 후 중복파일 삭제하고 처리
-				List<Document> fileList = this.searchFileWithApi(con, folder.getEid(), file.getFileName());
+				//connection reset 발생으로 인해 파일 삭제 api 호출시 새로운 커넥션 생성
+				XeConnect searchApiCon = this.getConnection(conf);
+				List<Document> fileList = this.searchFileWithApi(searchApiCon, folder.getEid(), file.getFileName());
 				for(Document item : fileList) {
 					Map<String, String> param = new HashMap<String, String>();
 					
@@ -250,6 +252,7 @@ public class ShMigHandler {
 						this.deleteDoc(con, eid);
 					}
 				}
+				searchApiCon.close();
 				fileMakeResult = this.makeFile(con, file, folder);
 			} else {
 				fileMakeResult = new FileMakeResult(result.getJsonObject());
