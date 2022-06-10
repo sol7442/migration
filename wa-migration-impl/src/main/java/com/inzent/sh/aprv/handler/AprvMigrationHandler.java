@@ -1,45 +1,30 @@
 package com.inzent.sh.aprv.handler;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.inzent.sh.ShMigHandler;
-import com.inzent.sh.ConsoleStepPrinter;
 import com.inzent.sh.aprv.entity.AprvFile;
 import com.inzent.sh.aprv.entity.AprvPerson;
 import com.inzent.sh.aprv.service.AprvService;
 import com.inzent.sh.entity.FileMakeResult;
-import com.inzent.sh.print.entity.PrintFile;
 import com.inzent.xedrm.api.Result;
 import com.inzent.xedrm.api.XAPIException;
 import com.inzent.xedrm.api.XeConnect;
-import com.inzent.xedrm.api.XeDocument;
 import com.inzent.xedrm.api.XeElement;
-import com.inzent.xedrm.api.domain.Document;
 import com.inzent.xedrm.api.domain.Folder;
 import com.quantum.mig.MigrationException;
 import com.quantum.mig.MigrationHandler;
-import com.quantum.mig.PrintStepHandler;
-import com.quantum.mig.entity.MigrationAudit;
 import com.quantum.mig.entity.MigrationResult;
-import com.quantum.mig.service.MigrationAuditService;
 import com.quantum.mig.service.MigrationResultService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AprvMigrationHandler extends ShMigHandler implements MigrationHandler {
-	private final String APPR_ATTACH_EID = "202203281636335j";
+	//private final String APPR_ATTACH_EID = "202203281636335j";
+	private final String APPR_ATTACH_EID = "Shared";
 	AprvService srcService = new AprvService(); 
 	MigrationResultService resService = new MigrationResultService();
 	
@@ -73,6 +58,8 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 			}			
 			
 		}catch (Exception e) {
+			log.error(e.getMessage(),e);
+			e.printStackTrace();
 			//saveErrorInfo();
 		}finally {
 			storeResult(result);
@@ -100,12 +87,12 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 //	}
 	
 	private void storeResult(MigrationResult result) {
-		try {
+		/*try {
 			log.debug(" - TASK RESULT  =>   : {} " , result.toString());
 			resService.record(result);
 		} catch (MigrationException e) {
 			new MigrationException(e.getMessage(),e);
-		}
+		}*/
 		
 	}
 	private void saveErrorInfo() {
@@ -119,6 +106,8 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 		log.info("{}",params);
 		MigrationResult result = new MigrationResult();
 		List<AprvFile> files = srcService.searchFiles(params);
+		int fileCount = files.size(); 
+		int successCnt = 0;
 		for(AprvFile file : files) {
 			try {
 				XeConnect con = super.getConnection(this.conf);
@@ -149,7 +138,8 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 					/**
 					 * 4. 파일 생성
 					 */
-					fileMakeResult = super.makeFile(con, file, folder);
+					fileMakeResult = super.makeFile(con, file, folder,false);
+					con = fileMakeResult.getConnection();
 					/**
 					 * 5. file id Description 갱신
 					 */
@@ -157,12 +147,13 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 					param.put("docId", fileMakeResult.getDocId());
 					param.put("description", file.getFILE_ID());
 					con.requestPost("updateDocProperty", param);
+					successCnt++;
 				} catch(XAPIException e) {
 					log.error(e.getMessage(),e);
 				} catch (Exception e) {
 					log.error(e.getMessage(),e);
 				} finally {
-					super.recordAudit(file.getFILE_ID(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),out_count,files.size());
+					super.recordAudit(file.getFILE_ID(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
 					con.close();
 				}
 			} catch (MigrationException e) {
@@ -174,6 +165,9 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 				e.printStackTrace();
 			}
 		}
+		log.debug("total : {} / target : {}" , fileCount , successCnt);
+		log.trace("list Detail : {}",files);
+		
 		return result;
 	}
 	/**

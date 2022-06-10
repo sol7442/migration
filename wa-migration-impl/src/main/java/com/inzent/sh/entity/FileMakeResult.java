@@ -2,6 +2,8 @@ package com.inzent.sh.entity;
 
 import java.util.Map;
 
+import com.inzent.xedrm.api.XeConnect;
+
 import lombok.Data;
 
 @Data
@@ -14,7 +16,10 @@ public class FileMakeResult {
 	private String dupActionId;
 	private String version;
 	
-	public FileMakeResult(Map<String,Object> data) {
+	private boolean isReconnect;
+	private XeConnect connection;
+	
+	private void init(Map<String,Object> data) {
 		this.folderPath 	= String.valueOf(data.get("folderPath"));
 		this.errCode 		= String.valueOf(data.get("errcode"));
 		this.docId 			= String.valueOf(data.get("docId"));
@@ -22,5 +27,11 @@ public class FileMakeResult {
 		this.errMsg 		= String.valueOf(data.get("errmsg"));
 		this.dupActionId 	= String.valueOf(data.get("dupActionId"));
 		this.version 		= String.valueOf(data.get("version"));
+	}
+	
+	public FileMakeResult(XeConnect con , boolean isReconnect , Map<String,Object> data) {
+		this.connection = con;
+		this.isReconnect = isReconnect;
+		this.init(data);
 	}
 }

@@ -1,5 +1,6 @@
 package com.inzent.sh.aprv.entity;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -42,7 +43,7 @@ public class AprvFile implements ShFile{
 	@Override
 	public String getPath() {
 		// TODO Auto-generated method stub
-		return this.PHY_SAVE_PATH_NM;
+		return this.PHY_SAVE_PATH_NM+File.separator+this.FILE_NM;
 	}
 
 	@Override

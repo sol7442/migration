@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -46,12 +47,12 @@ public class ShMigHandler {
 	protected MigrationAuditService auditService = new MigrationAuditService();
 	protected SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd hh:mm:ss");
 	
-	protected int step_count = 0; 
-	protected int out_count = 0;
-	
+	protected int stepCount = 0; 
+	protected int outCount = 0;
+	protected int deletedCount = 0;
 	protected PrintStepHandler loadStepPrinter(Map<String, Object> conf) {
-		out_count = (int)conf.get("out.count");
-		return new ConsoleStepPrinter(out_count);
+		outCount = (int)conf.get("out.count");
+		return new ConsoleStepPrinter(outCount);
 	}
 	
 	protected Folder makeFolder(XeConnect con , String path ,String eid) {
@@ -74,7 +75,11 @@ public class ShMigHandler {
 	
 	protected Result deleteDoc(XeConnect con , String eid) {
 		XeDocument xd = new XeDocument(con);
-		return xd.deleteDocument(eid);
+		Result result = xd.deleteDocument(eid); 
+		deletedCount++;
+		log.debug("delete target:{}/count : {}/result : {}", eid ,deletedCount,result);
+		//System.out.println(result);
+		return result;
 	}
 	/**
 	 * 권한 수정(폴더)
@@ -157,8 +162,8 @@ public class ShMigHandler {
 	}
 	
 	protected Map<String,Object> makeTimeParameter(Map<String,Object> condition) {
-		Integer page = condition.get("page")==null?null:Integer.valueOf((String)condition.get("page"));
-		Integer count = condition.get("count")==null?null:Integer.valueOf((String)condition.get("count"));
+		Integer page = condition.get("page")==null?null:Integer.valueOf(condition.get("page").toString());
+		Integer count = condition.get("count")==null?null:Integer.valueOf(condition.get("count").toString());
 		String stime = (String)condition.get("stime");
 		String etime = (String)condition.get("etime");
 		
@@ -182,10 +187,10 @@ public class ShMigHandler {
 	protected void recordAudit(String srcId , String tagId , String action , String resultCd , String msg,int step,int total) throws MigrationException {
 		MigrationAudit audit = this.makeDefaultAudit(srcId, tagId, action, resultCd, msg);
 		log.debug(" - TASK AUDIT  =>   : {} " , audit.toString());
-		if((step_count%step) == 0) {
-			steper.print(audit , total , step_count);
+		if((stepCount%step) == 0) {
+			steper.print(audit , total , stepCount);
 		}
-		step_count++;
+		stepCount++;
 		auditService.record(audit);
 	}
 	
@@ -216,7 +221,7 @@ public class ShMigHandler {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	protected FileMakeResult makeFile(XeConnect con ,ShFile file ,Folder folder) throws Exception {
+	protected FileMakeResult makeFile(XeConnect con ,ShFile file ,Folder folder,boolean isReconnect) throws Exception {
 		XeDocument xd = new XeDocument(con);
 		FileMakeResult fileMakeResult = null;
 		Result result = null;
@@ -234,8 +239,8 @@ public class ShMigHandler {
 				//파일 중복 에러는 특수 처리
 				//파일 검색 후 중복파일 삭제하고 처리
 				//connection reset 발생으로 인해 파일 삭제 api 호출시 새로운 커넥션 생성
-				XeConnect searchApiCon = this.getConnection(conf);
-				List<Document> fileList = this.searchFileWithApi(searchApiCon, folder.getEid(), file.getFileName());
+				//성능의 이슈로 connection reset이 발생할 때만 connection 재생성. 
+				List<Document> fileList = this.searchFileWithApi(con, folder.getEid(), file.getFileName());
 				for(Document item : fileList) {
 					Map<String, String> param = new HashMap<String, String>();
 					
@@ -249,18 +254,28 @@ public class ShMigHandler {
 					Result updateDocResult = con.requestPost("updateDocProperty", param);
 					if(updateDocResult.isSuccess()) {
 						//Result deleteResult = this.deleteDoc(con, eid);
+						log.debug("delete target:{}/count : {}", eid, deletedCount);
+						this.deleteDoc(con, eid);
+					} else {
+						log.debug("delete failed:{}/{}", eid,updateDocResult);
 						this.deleteDoc(con, eid);
 					}
 				}
-				searchApiCon.close();
-				fileMakeResult = this.makeFile(con, file, folder);
+				fileMakeResult = this.makeFile(con, file, folder,isReconnect);
 			} else {
-				fileMakeResult = new FileMakeResult(result.getJsonObject());
+				fileMakeResult = new FileMakeResult(con,isReconnect,result.getJsonObject());
 			}
 		} catch(XAPIException e) {
 			throw e;
 		} catch(FileNotFoundException e) {
 			throw e;
+		} catch(SocketException e) {
+			//connection reset 발생시
+			if(con != null) {
+				con.close();
+			}
+			XeConnect searchApiCon = this.getConnection(conf);
+			fileMakeResult = this.makeFile(searchApiCon, file, folder,true);
 		} catch(IOException e) {
 			throw e;
 		} catch(Exception e) {

@@ -103,55 +103,57 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		Map<String,Object> params = (Map<String, Object>) condition.get("params");
 		log.info("{}",params);
 		MigrationResult result = new MigrationResult();
-		int fileCount = srcService.fileCount();
 		List<PrintFile> files = srcService.searchFiles(params);
+		int fileCount = files.size(); 
+		int successCnt = 0;
 		for(PrintFile file : files) {
 			try {
 				/**
 				 * 1. 폴더 생성 호출
 				 */
 				String fldPath = file.getFLD_PATH();
-				if("Y".equals(file.getCHECK_YN())){
-					Folder folder = null;
-					XeConnect con = null;
-					try {
-						con = super.getConnection(this.conf);
-						//eid Shared 고정 - 전사 문서함
-						//"준공도면관리" 프로퍼티 처리?
-						folder = super.makeFolder(con, DEFAULT_FOLDER_PATH+fldPath, "Shared");
-						/**
-						 * 2. 폴더 권한 변경
-						 */
-						Result modifyRightsResult = super.modifyRights(con, folder.getEid());
-						/**
-						 * 3. 폴더 추가 속성
-						 */
-						this.updateAdditionalAttr(con, file, folder);
-						super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "Success");
-						
-					} catch (XAPIException e) {
-						log.error(e.getMessage(),e);
-						//폴더 생성 결과 저장
-						super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.toString());
-					} 
+				Folder folder = null;
+				XeConnect con = null;
+				try {
+					con = super.getConnection(this.conf);
+					//eid Shared 고정 - 전사 문서함
+					//"준공도면관리" 프로퍼티 처리?
+					folder = super.makeFolder(con, DEFAULT_FOLDER_PATH+fldPath, "Shared");
+					/**
+					 * 2. 폴더 권한 변경
+					 */
+					//Result modifyRightsResult = super.modifyRights(con, folder.getEid());
+					super.modifyRights(con, folder.getEid());
+					/**
+					 * 3. 폴더 추가 속성
+					 */
+					this.updateAdditionalAttr(con, file, folder);
+					super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "Success");
 					
-					FileMakeResult fileMakeResult = null;
-					try {
-						/**
-						 * 4. 파일 생성
-						 */
-						fileMakeResult = super.makeFile(con, file, folder);
-					} catch(XAPIException e) {
-						log.error(e.getMessage(),e);
-					} catch (Exception e) {
-						log.error(e.getMessage(),e);
-					} finally {
-						super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),out_count,files.size());
-						if(con != null) {
-							con.close();
-						}
-					}
+				} catch (XAPIException e) {
+					log.error(e.getMessage(),e);
+					//폴더 생성 결과 저장
+					super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.toString());
 				} 
+				
+				FileMakeResult fileMakeResult = null;
+				try {
+					/**
+					 * 4. 파일 생성
+					 */
+					fileMakeResult = super.makeFile(con, file, folder,false);
+					con = fileMakeResult.getConnection();
+					successCnt++;
+				} catch(XAPIException e) {
+					log.error(e.getMessage(),e);
+				} catch (Exception e) {
+					log.error(e.getMessage(),e);
+				} finally {
+					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
+					if(con != null) {
+						con.close();
+					}
+				}
 			} catch (MigrationException e) {
 				// TODO Auto-generated catch block
 				log.error(e.getMessage(),e);
@@ -161,7 +163,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 				e.printStackTrace();
 			}
 		}
-		log.debug("total : {} / target : {}" , fileCount , files.size());
+		log.debug("total : {} / target : {}" , fileCount , successCnt);
 		log.trace("list Detail : {}",files);
 		
 		//미사용
@@ -199,6 +201,8 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		 */
 		return result;
 	}
+	
+	 
 	
 	private MigrationResult migSimulate(Map<String,Object> condition) throws MigrationException {
 		MigrationResult result = new MigrationResult();
