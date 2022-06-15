@@ -1,46 +1,35 @@
-log.path : ../logs
-log.mode : debug
-class: print
-handler : com.inzent.sh.PrintMigrationHandler
+class: PRINT
+handler : com.inzent.sh.print.handler.PrintMigrationHandler
 out.count: 10
-
+xe:
+  connect.url: http://54.180.132.53:8300/xedrm
+  connect.id: SUPER
+  connect.pw: SUPER 
+#migByTime
 condition:
-  type: simul
+  type: time
 time.condition:
-  stime: 2022:04:15 12:00:00
-  etime: 2022:04:20 12:00:00
-  page: 10
-  count: 10
+  stime: !!str 2014-08-13 12:00:00
+  etime: !!str 2022-04-20 12:00:00
+  page: 
+  count: 
 file.condition:
 simul.condition:
 repository:
-  # 사용 x
-  tar.drivder: org.mariadb.jdbc.Driver
-  tar.url: jdbc:mariadb://192.168.0.105:3306/scim
-  tar.passwd: oacxpwd@1
-  tar.user: root
-  tar.path: ../conf/mapper/test/kms/tar/
-  
   # 원천테이블
-  src.drivder: org.mariadb.jdbc.Driver
-  src.url: jdbc:mariadb://192.168.0.105:3306/migration
-  src.user: root
-  src.passwd: oacxpwd@1
-  src.path: ../conf/mapper/test/kms/src/
-  src.validation: select 1
-  
-  # 결과테이블
-  res.drivder: org.mariadb.jdbc.Driver
-  res.url: jdbc:mariadb://192.168.0.105:3306/migration
-  res.user: root
-  res.passwd: oacxpwd@1
-  res.path: ../conf/mapper/test/kms/result/
-  res.validation: select 1
+  source :
+    driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://192.168.0.105:1433;database=SCIM
+    user: scim
+    passwd: scimpwd@1
+    path: /conf/mapper/sh/print/src/
+    validation: select 1 
   
   # 이력테이블
-  audit.drivder: org.mariadb.jdbc.Driver
-  audit.url: jdbc:mariadb://192.168.0.105:3306/migration
-  audit.user: root
-  audit.passwd: oacxpwd@1
-  audit.path: ../conf/mapper/test/kms/audit/
-  audit.validation: select 1
+  audit : 
+    driver: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://192.168.0.105:3306/migration
+    user: root
+    passwd: oacxpwd@1
+    path: /conf/mapper/sh/audit
+    validation: select 1

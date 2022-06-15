@@ -3,15 +3,15 @@ MODULE_NAME=${1}
 echo ${MODULE_NAME}
 
 if [ -z "${MODULE_NAME}" ]; then
-    echo $"Usage : $0 {kms|appv|print}"
+    echo $"Usage : $0 {kms|aprv|print}"
     exit 1
 else
   case ${1} in
     kms   ) echo "kms start"   ;;
-    appv  ) echo "appv start"  ;;
+    appv  ) echo "aprv start"  ;;
     print ) echo "print start" ;;
     *) 
-    echo $"Usage : $0 {kms|appv|print}"
+    echo $"Usage : $0 {kms|aprv|print}"
     exit 1
     esac
 fi

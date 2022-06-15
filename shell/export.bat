@@ -3,20 +3,20 @@ set MODULE_NAME=%1%
 
 
 if "%1%"=="" (
-	echo "Usage : {kms|appv|print}"
+	echo "Usage : {kms|aprv|print}"
 	exit
 ) else (
 	if "%MODULE_NAME%" == "kms" ( 
 	echo module name : %MODULE_NAME%
 	goto set_val
-	) else if "%MODULE_NAME%" == "appv" ( 
+	) else if "%MODULE_NAME%" == "aprv" ( 
 	echo module name : %MODULE_NAME%
 	goto set_val
 	) else if "%MODULE_NAME%" == "print" (
 	echo module name : %MODULE_NAME%
 	goto set_val
 	) else (
-		echo "Usage : {kms|appv|print}"
+		echo "Usage : {kms|aprv|print}"
 		exit
 	)
 	

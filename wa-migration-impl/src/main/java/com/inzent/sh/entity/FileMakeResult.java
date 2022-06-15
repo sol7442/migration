@@ -28,10 +28,20 @@ public class FileMakeResult {
 		this.dupActionId 	= String.valueOf(data.get("dupActionId"));
 		this.version 		= String.valueOf(data.get("version"));
 	}
-	
+	/*
+	 * 2022-06-13
+	 * 파일 중복시 처리 업무 변경으로 인해 미사용
+	 * */
+	@Deprecated
 	public FileMakeResult(XeConnect con , boolean isReconnect , Map<String,Object> data) {
 		this.connection = con;
 		this.isReconnect = isReconnect;
 		this.init(data);
+	}
+	/**
+	 * @param fileMakeResultMap 파일 생성 결과 
+	 */
+	public FileMakeResult(Map<String,Object> fileMakeResultMap) {
+		this.init(fileMakeResultMap);
 	}
 }

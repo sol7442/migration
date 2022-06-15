@@ -31,4 +31,27 @@ public class PrintFolder {
 	private String FLD_PATH;
 	private String CNTRC_NO;
 	private String CNTRC_DT;
+	/**
+	 * 부모 SEQ가 56400,79497 , 79574 , 82358 , 82359 , 82360 일 경우 
+	 * 확장속성 부여
+	 * @return
+	 */
+	public boolean isAddAttrValue() {
+		switch (this.PAR_FLD_SEQ) {
+		case 56400:
+			return true;
+		case 79497:
+			return true;
+		case 79574:
+			return true;				
+		case 82358:
+			return true;					
+		case 82359:
+			return true;
+		case 82360:
+			return true;
+		default:
+			return false;
+		}
+	}
 }

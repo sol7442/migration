@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
 import java.security.SecureRandom;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,6 +19,7 @@ import org.json.simple.JSONObject;
 
 import com.inzent.sh.entity.FileMakeResult;
 import com.inzent.sh.entity.ShFile;
+import com.inzent.sh.exception.DuplicatedFileException;
 import com.inzent.sh.util.YamlUtil;
 import com.inzent.xedrm.api.Result;
 import com.inzent.xedrm.api.XAPIException;
@@ -60,6 +60,45 @@ public class ShMigHandler {
 		//xf.getOrCreateFolderByPath(폴더경로, 부모폴더eid);
 		return xf.getOrCreateFolderByPath(path, eid);
 	}
+	/**
+	 * 
+	 * @param con
+	 * @param folderList
+	 * @param eid
+	 * @return
+	 * @throws MigrationException 
+	 */
+	protected String makeFolder(XeConnect con , List<Map<String,Object>> folderList ,String eid) throws MigrationException {
+		Result result = null;
+		XeFolder xf = new XeFolder(con);
+		XeElement xe = new XeElement(con);
+		String parentFolderId = eid;
+		for(Map<String,Object> folderInfo : folderList) {
+			result = xf.createFolder(parentFolderId, (String)folderInfo.get("name"));
+			if(result.isSuccess()) {
+				parentFolderId = (String)result.getData(0).get("rid");
+				modifyRights(con, parentFolderId);
+				@SuppressWarnings("unchecked")
+				Map<String,String> elementAttr = (Map<String, String>)folderInfo.get("elementAttr");
+				if(elementAttr != null) {
+					Result attrResult = xe.updateAttrEx(parentFolderId, elementAttr);
+					if(!attrResult.isSuccess()) {
+						// 확장속성 저장 실패로 인한 폴더 생성 실패
+						throw new XAPIException(attrResult.getReturnCode(),attrResult.getErrorMessage());
+					}
+					continue;
+				}
+				recordAudit((String)folderInfo.get("FLD_SEQ"), parentFolderId, "CREATE", "0", "Success");
+			} 
+			if("ECM0001".equals(result.getReturnCode())) {
+				parentFolderId = (String) result.getJsonObject().get("rid");
+				continue;
+			} 
+		}
+		return parentFolderId;
+	}
+	
+	
 	/**
 	 * 파일 목록 찾기
 	 * @param con xe 커넥션
@@ -239,43 +278,73 @@ public class ShMigHandler {
 				//파일 중복 에러는 특수 처리
 				//파일 검색 후 중복파일 삭제하고 처리
 				//connection reset 발생으로 인해 파일 삭제 api 호출시 새로운 커넥션 생성
-				//성능의 이슈로 connection reset이 발생할 때만 connection 재생성. 
-				List<Document> fileList = this.searchFileWithApi(con, folder.getEid(), file.getFileName());
-				for(Document item : fileList) {
-					Map<String, String> param = new HashMap<String, String>();
-					
-					String eid = item.getEid();
-					LocalDateTime now = LocalDateTime.now();
-					Timestamp timestamp = Timestamp.valueOf(now);
-					
-					param.put("docId", eid);
-					param.put("description", "마이그레이션 중복 파일 삭제 - " + timestamp);
-					
-					Result updateDocResult = con.requestPost("updateDocProperty", param);
-					if(updateDocResult.isSuccess()) {
-						//Result deleteResult = this.deleteDoc(con, eid);
-						log.debug("delete target:{}/count : {}", eid, deletedCount);
-						this.deleteDoc(con, eid);
-					} else {
-						log.debug("delete failed:{}/{}", eid,updateDocResult);
-						this.deleteDoc(con, eid);
-					}
-				}
-				fileMakeResult = this.makeFile(con, file, folder,isReconnect);
+				//성능의 이슈로 connection reset이 발생할 때만 connection 재생성.
+				//파일 중복은 그냥 폴더의 full path + 파일명으로 처리 하는 것으로 재협의 
+				Document fd = xd.getDocument(folder.getEid());
+				DuplicatedFileException e = new DuplicatedFileException(result.getReturnCode()
+																	   ,fd.getFullPath() +File.separator+file.getFileName()
+																	   ,"File Already Exists.");
+				throw e;
 			} else {
-				fileMakeResult = new FileMakeResult(con,isReconnect,result.getJsonObject());
+				fileMakeResult = new FileMakeResult(result.getJsonObject());
 			}
 		} catch(XAPIException e) {
 			throw e;
 		} catch(FileNotFoundException e) {
 			throw e;
 		} catch(SocketException e) {
-			//connection reset 발생시
-			if(con != null) {
-				con.close();
+			throw e;
+		} catch(IOException e) {
+			throw e;
+		} catch(Exception e) {
+			throw e;
+		}
+		return fileMakeResult;
+	}
+	
+	/**
+	 * 파일 중복 에러는 특수 처리
+	 * 파일 검색 후 중복파일 삭제하고 처리
+	 * connection reset 발생으로 인해 파일 삭제 api 호출시 새로운 커넥션 생성
+	 * 성능의 이슈로 connection reset이 발생할 때만 connection 재생성.
+	 * 파일 중복은 그냥 폴더의 full path + 파일명으로 처리 하는 것으로 재협의
+	 * @param con
+	 * @param file
+	 * @param folder
+	 * @return
+	 * @throws Exception
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	protected FileMakeResult makeFile(XeConnect con ,ShFile file ,String folderId,boolean isReconnect) throws Exception {
+		XeDocument xd = new XeDocument(con);
+		FileMakeResult fileMakeResult = null;
+		Result result = null;
+		File f = new File(file.getPath());
+		try(InputStream is = new FileInputStream(f)){
+			// xd.createDocument(업로드 대상 폴더eid, 파일, 업로드파일명, 생성자, 소유자, 생성일, 수정일,
+			// 덮어쓰기여부(false), 파일명변경여부(false));
+			result = xd.createDocument(folderId, is, file.getFileName() 
+									 , file.getRegister()
+									 , file.getOwner()
+									 , file.getRegistDate()
+									 , file.getModifyDate()
+									 , false, false);
+			if("ECM0001".equals(result.getReturnCode())) {
+				Document fd = xd.getDocument(folderId);
+				DuplicatedFileException e = new DuplicatedFileException(result.getReturnCode()
+																	   ,fd.getFullPath() +File.separator+file.getFileName()
+																	   ,"File Already Exists.");
+				throw e;
+			} else {
+				fileMakeResult = new FileMakeResult(result.getJsonObject());
 			}
-			XeConnect searchApiCon = this.getConnection(conf);
-			fileMakeResult = this.makeFile(searchApiCon, file, folder,true);
+		} catch(XAPIException e) {
+			throw e;
+		} catch(FileNotFoundException e) {
+			throw e;
+		} catch(SocketException e) {
+			throw e;
 		} catch(IOException e) {
 			throw e;
 		} catch(Exception e) {

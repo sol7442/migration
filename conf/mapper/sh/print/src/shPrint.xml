@@ -4,13 +4,6 @@
 	<select id="folderCount" resultType="java.lang.Integer" parameterType="java.util.Map">
 		SELECT COUNT(1) FROM USR_FOLDER_MST
 	</select>
-	<!-- CHECK_YN = 'Y'인 폴더만 생성 -->
-	<select id="searchFolders" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="java.util.Map">
-		SELECT * 
-		FROM USR_FOLDER_MST
-		WHERE 1=1
-		AND CHECK_YN = 'Y'
-	</select>
 	<select id="readFolder" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="com.quantum.mig.entity.DefaultMigIdentity">
 		SELECT *
 		FROM USR_FOLDER_MST
@@ -28,27 +21,30 @@
 		ON R.FLD_SEQ = FLD.FLD_SEQ
 		WHERE M.DELETE_YN = 'N'
 	</select>
-	<!-- <select id="searchFolders" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="java.util.Map">
-		SELECT M.OBJ_SEQ
-			 , M.OBJ_NM
-			 , M.DELETE_YN
-			 , L.OBJ_FILE_SEQ 
-			 , L.ORG_FILE_NM
-			 , L.FILE_PATH
-			 , L.FILE_NM
-			 , L.REG_DT
-			 , L.REG_ID
-			 , L.UPD_ID
-			 , L.UPD_DT
-			 , FR.FLD_SEQ
-		FROM OBJ_OBJECT_MST M
-		JOIN OBJ_FILE_LST L
-		ON M.OBJ_SEQ = L.OBJ_SEQ
-		JOIN OBJ_FLD_REL FR
-		ON M.OBJ_SEQ = FR.OBJ_SEQ
-		WHERE 1=1
-		AND M.DELETE_YN = 'N'
-	</select> -->
+	<select id="searchFolders" resultType="com.inzent.sh.print.entity.PrintFolder" parameterType="java.util.Map">
+		WITH TREE_QUERY
+		AS (SELECT FLD_SEQ
+		         , FLD_NM
+		         , PAR_FLD_SEQ
+		         , REG_DT
+			FROM USR_FOLDER_MST 
+			WHERE FLD_SEQ = #{FLD_SEQ}
+			UNION ALL 
+			SELECT M.FLD_SEQ 
+		         , M.FLD_NM
+		         , M.PAR_FLD_SEQ
+		         , M.REG_DT
+			FROM USR_FOLDER_MST M 
+			JOIN TREE_QUERY TQ
+			ON M.FLD_SEQ = TQ.PAR_FLD_SEQ 
+		)
+		SELECT FLD_SEQ
+	         , FLD_NM
+	         , PAR_FLD_SEQ
+	         , REG_DT
+	    FROM TREE_QUERY
+	    ORDER BY FLD_SEQ 
+    </select> 
 	<select id="searchFiles" resultType="com.inzent.sh.print.entity.PrintFile" parameterType="java.util.Map">
 		SELECT A.rownum
 		     , A.*

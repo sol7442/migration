@@ -1,12 +1,15 @@
 package com.inzent.sh.print.handler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.inzent.sh.ShMigHandler;
 import com.inzent.sh.entity.FileMakeResult;
+import com.inzent.sh.exception.DuplicatedFileException;
 import com.inzent.sh.print.entity.PrintFile;
+import com.inzent.sh.print.entity.PrintFolder;
 import com.inzent.sh.print.service.PrintService;
 import com.inzent.xedrm.api.Result;
 import com.inzent.xedrm.api.XAPIException;
@@ -23,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrintMigrationHandler extends ShMigHandler implements MigrationHandler {
 	private final String DEFAULT_FOLDER_PATH = "/준공도면관리/"; 
-	
 	PrintService srcService = new PrintService(); //도면 source 서비스
 	MigrationResultService resService = new MigrationResultService();
 	
@@ -109,31 +111,20 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		for(PrintFile file : files) {
 			try {
 				/**
-				 * 1. 폴더 생성 호출
+				 * 1. 폴더 생성 호출 , 폴더 권한 변경 , 폴더 추가 속성 처리
 				 */
-				String fldPath = file.getFLD_PATH();
-				Folder folder = null;
+				List<Map<String,Object>> folderList = makeFolderListFromPath(file);
+				String folderId = null;
 				XeConnect con = null;
 				try {
 					con = super.getConnection(this.conf);
 					//eid Shared 고정 - 전사 문서함
 					//"준공도면관리" 프로퍼티 처리?
-					folder = super.makeFolder(con, DEFAULT_FOLDER_PATH+fldPath, "Shared");
-					/**
-					 * 2. 폴더 권한 변경
-					 */
-					//Result modifyRightsResult = super.modifyRights(con, folder.getEid());
-					super.modifyRights(con, folder.getEid());
-					/**
-					 * 3. 폴더 추가 속성
-					 */
-					this.updateAdditionalAttr(con, file, folder);
-					super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", "0", "Success");
-					
+					folderId = super.makeFolder(con,folderList , "Shared");
 				} catch (XAPIException e) {
 					log.error(e.getMessage(),e);
-					//폴더 생성 결과 저장
-					super.recordAudit(String.valueOf(file.getFLD_SEQ()), folder.getEid(), "CREATE", e.getErrorCode(), e.toString());
+					//폴더 생성 결과 저장 진행중
+					super.recordAudit(String.valueOf(file.getFLD_SEQ()),"" , "ERROR", e.getErrorCode(), e.toString());
 				} 
 				
 				FileMakeResult fileMakeResult = null;
@@ -141,21 +132,21 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 					/**
 					 * 4. 파일 생성
 					 */
-					fileMakeResult = super.makeFile(con, file, folder,false);
-					con = fileMakeResult.getConnection();
+					fileMakeResult = super.makeFile(con, file, folderId,false);
+					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
 					successCnt++;
 				} catch(XAPIException e) {
 					log.error(e.getMessage(),e);
+				} catch(DuplicatedFileException e) {
+					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(),e.getFullFilePath(), "IGNORE", "0", e.getMessage(),outCount,files.size());
 				} catch (Exception e) {
 					log.error(e.getMessage(),e);
 				} finally {
-					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
 					if(con != null) {
 						con.close();
 					}
 				}
 			} catch (MigrationException e) {
-				// TODO Auto-generated catch block
 				log.error(e.getMessage(),e);
 				e.printStackTrace();
 			} catch (Exception e) {
@@ -178,7 +169,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 			
 		return result;
 	}
-
+	@Deprecated
 	private Result updateAdditionalAttr(XeConnect con ,PrintFile file ,Folder folder) throws XAPIException{
 		XeElement xe = new XeElement(con);
 		Map<String, String> attrValue = new HashMap<String, String>();
@@ -214,5 +205,46 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		return null;
 	}
 	
+	private List<Map<String, Object>> makeFolderListFromPath(PrintFile file) throws MigrationException {
+		String fldPath = file.getFLD_PATH();
+		List<PrintFolder> folderInfoList = srcService.searchFolders(makeParamForFolders(String.valueOf(file.getFLD_SEQ())));
+		List<Map<String, Object>> folderList = new ArrayList<Map<String, Object>>();
+		//최상위 폴더
+		Map<String, Object> folder = new HashMap<String, Object>();
+		folder.put("name", "준공도면관리");
+		// api개선 이후 폴더생성일 적용 시 사용. 상수값?
+		// 이병희 수석님 의견으로 준공도면관리 라고 하는 폴더는 생성되어 있을 것이라고 확인.
+		// 중복에러 처리 나면서 ignore 될 것임.
+	    folder.put("createDate", "2020-01-01 09:03:25"); 
+	    folder.put("FLD_SEQ" , folderInfoList.get(0).getFLD_SEQ());
+	    folderList.add(folder);
+	    
+	    String[] fldPathArray = fldPath.split("/");
+	    for(int i = 0 ; i <fldPathArray.length ; i++) {
+	    	if (i == 0 && "SH공사".equals(fldPathArray[0])) {
+               continue;
+	        }
+	    	if (fldPathArray[i] != null && !(fldPathArray[i].trim()).equals("")) {
+	    		folder = new HashMap<String, Object>();
+	        	folder.put("name", fldPathArray[i]);
+	        	folder.put("createDate", format.format(folderInfoList.get(i).getREG_DT()));
+	        	folder.put("FLD_SEQ" , folderInfoList.get(i).getFLD_SEQ());
+    		}
+	    	
+	    	if (i == 2 && folderInfoList.get(i).isAddAttrValue()) {
+	    		Map<String, String> attrValue = new HashMap<String, String>();
+	    		attrValue.put("sh:ctrNm", fldPathArray[i]);
+	    		folder.put("elementAttr", attrValue);
+	    	}
+	    	folderList.add(folder);
+	    	log.debug("{}=={}",fldPathArray[i],folderInfoList.get(i).getFLD_NM());
+	    }
+	    return folderList;
+	}
 	
+	private Map<String,Object> makeParamForFolders(String fldSeq) {
+		Map<String,Object> params = new HashMap<String, Object>();
+		params.put("FLD_SEQ", fldSeq);
+		return params;
+	}
 }
