@@ -8,6 +8,7 @@ import java.util.Map;
 import com.inzent.sh.ShMigHandler;
 import com.inzent.sh.entity.FileMakeResult;
 import com.inzent.sh.exception.DuplicatedFileException;
+import com.inzent.sh.exception.OmittedFolderException;
 import com.inzent.sh.print.entity.PrintFile;
 import com.inzent.sh.print.entity.PrintFolder;
 import com.inzent.sh.print.service.PrintService;
@@ -108,15 +109,36 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		List<PrintFile> files = srcService.searchFiles(params);
 		int fileCount = files.size(); 
 		int successCnt = 0;
+		
+		
+		String omittedFolderId = null;
+		/**
+		 * 누락파일 저장용 폴더 생성
+		 * 누락파일 -> 계층쿼리를 통해 조회된 폴더에 누락이 생긴 경우 해당 파일은 누락파일 저장용 폴더에 넣는다.
+		 */
+		XeConnect conOmittedFolder = null;
+		try {
+			conOmittedFolder = super.getConnection(this.conf);
+			Folder omittedFolder = this.makeFolderForOmittedFile(conOmittedFolder);
+			omittedFolderId = omittedFolder.getEid();
+		} catch(Exception e) {
+			log.error(e.getMessage(),e);
+			throw e;
+		} finally {
+			if(conOmittedFolder !=null) {
+				conOmittedFolder.close();
+			}
+		}
+		
 		for(PrintFile file : files) {
 			try {
 				/**
 				 * 1. 폴더 생성 호출 , 폴더 권한 변경 , 폴더 추가 속성 처리
 				 */
-				List<Map<String,Object>> folderList = makeFolderListFromPath(file);
 				String folderId = null;
 				XeConnect con = null;
 				try {
+					List<Map<String,Object>> folderList = makeFolderListFromPath(file);
 					con = super.getConnection(this.conf);
 					//eid Shared 고정 - 전사 문서함
 					//"준공도면관리" 프로퍼티 처리?
@@ -125,7 +147,9 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 					log.error(e.getMessage(),e);
 					//폴더 생성 결과 저장 진행중
 					super.recordAudit(String.valueOf(file.getFLD_SEQ()),"" , "ERROR", e.getErrorCode(), e.toString());
-				} 
+				} catch (OmittedFolderException e) {
+					folderId = omittedFolderId;
+				}
 				
 				FileMakeResult fileMakeResult = null;
 				try {
@@ -138,7 +162,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 				} catch(XAPIException e) {
 					log.error(e.getMessage(),e);
 				} catch(DuplicatedFileException e) {
-					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(),e.getFullFilePath(), "IGNORE", "0", e.getMessage(),outCount,files.size());
+					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(),"", "IGNORE", "0", e.getMessage()+" : "+e.getFullFilePath(),outCount,files.size());
 				} catch (Exception e) {
 					log.error(e.getMessage(),e);
 				} finally {
@@ -220,15 +244,27 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	    folderList.add(folder);
 	    
 	    String[] fldPathArray = fldPath.split("/");
+	    
+	    /**
+	     * depth 비교 
+	     * 누락폴더 있는지 확인 누락폴더 존재시 해당 파일은 누락폴더에 생성
+	     * 불필요 로직
+	     */
+	    int fldPathSize = folderInfoList.size();
+	    if(fldPathSize!=fldPathArray.length) {
+	    	throw new OmittedFolderException(fldPathArray.length, fldPathSize, "omitted folder : " + folderInfoList.get(fldPathSize-1));
+	    }
+	    
 	    for(int i = 0 ; i <fldPathArray.length ; i++) {
 	    	if (i == 0 && "SH공사".equals(fldPathArray[0])) {
                continue;
 	        }
 	    	if (fldPathArray[i] != null && !(fldPathArray[i].trim()).equals("")) {
+	    		PrintFolder folderInfo = folderInfoList.get(i);
 	    		folder = new HashMap<String, Object>();
 	        	folder.put("name", fldPathArray[i]);
-	        	folder.put("createDate", format.format(folderInfoList.get(i).getREG_DT()));
-	        	folder.put("FLD_SEQ" , folderInfoList.get(i).getFLD_SEQ());
+	        	folder.put("createDate", format.format(folderInfo.getREG_DT()));
+	        	folder.put("SrcId" , folderInfo.getFLD_SEQ());
     		}
 	    	
 	    	if (i == 2 && folderInfoList.get(i).isAddAttrValue()) {
@@ -246,5 +282,9 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		Map<String,Object> params = new HashMap<String, Object>();
 		params.put("FLD_SEQ", fldSeq);
 		return params;
+	}
+	
+	public Folder makeFolderForOmittedFile(XeConnect con) {
+		return super.makeFolder(con, "부모없는 파일", "Shared");
 	}
 }

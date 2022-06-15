@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 public class AprvFile implements ShFile{
-	SimpleDateFormat format = new SimpleDateFormat("YYYY-mm-DD");
+	SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd");
 	private int APRV_SEQ;
 	private String FILE_ID;
 	private String CREATE_USER;

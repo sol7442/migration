@@ -45,7 +45,7 @@ public class ShMigHandler {
 	private SecureRandom random = new SecureRandom();
 		
 	protected MigrationAuditService auditService = new MigrationAuditService();
-	protected SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd hh:mm:ss");
+	protected SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 	
 	protected int stepCount = 0; 
 	protected int outCount = 0;
@@ -88,7 +88,7 @@ public class ShMigHandler {
 					}
 					continue;
 				}
-				recordAudit((String)folderInfo.get("FLD_SEQ"), parentFolderId, "CREATE", "0", "Success");
+				recordAudit(String.valueOf(folderInfo.get("SrcId")), parentFolderId, "CREATE", "0", "Success");
 			} 
 			if("ECM0001".equals(result.getReturnCode())) {
 				parentFolderId = (String) result.getJsonObject().get("rid");
@@ -259,6 +259,7 @@ public class ShMigHandler {
 	 * @return
 	 * @throws Exception
 	 */
+	@Deprecated
 	@SuppressWarnings("unchecked")
 	protected FileMakeResult makeFile(XeConnect con ,ShFile file ,Folder folder,boolean isReconnect) throws Exception {
 		XeDocument xd = new XeDocument(con);
@@ -314,7 +315,6 @@ public class ShMigHandler {
 	 * @return
 	 * @throws Exception
 	 */
-	@Deprecated
 	@SuppressWarnings("unchecked")
 	protected FileMakeResult makeFile(XeConnect con ,ShFile file ,String folderId,boolean isReconnect) throws Exception {
 		XeDocument xd = new XeDocument(con);
@@ -352,5 +352,4 @@ public class ShMigHandler {
 		}
 		return fileMakeResult;
 	}
-	
 }

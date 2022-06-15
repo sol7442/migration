@@ -15,8 +15,9 @@ public class FileMakeResult {
 	private String errMsg;
 	private String dupActionId;
 	private String version;
-	
+	@Deprecated
 	private boolean isReconnect;
+	@Deprecated
 	private XeConnect connection;
 	
 	private void init(Map<String,Object> data) {

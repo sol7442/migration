@@ -33,3 +33,5 @@ repository:
     passwd: oacxpwd@1
     path: /conf/mapper/sh/audit
     validation: select 1
+extra :
+  eid : Shared

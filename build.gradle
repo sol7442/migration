@@ -29,7 +29,7 @@ allprojects{
 	sourceCompatibility = 1.8
 	targetCompatibility = 1.8
 	compileJava.options.encoding = 'UTF-8'
-	project.ext.main_ver  = 1.0
+	project.ext.main_ver  = 1.2.1
 	repositories {
 		mavenCentral()
 	}

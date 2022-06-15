@@ -1,5 +1,6 @@
 package com.inzent.sh.aprv.handler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +24,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AprvMigrationHandler extends ShMigHandler implements MigrationHandler {
-	//private final String APPR_ATTACH_EID = "202203281636335j";
-	private final String APPR_ATTACH_EID = "Shared";
+	private String APPR_ATTACH_EID ;
+	//private final String APPR_ATTACH_EID = "Shared";
+	//= "202203281636335j"
 	AprvService srcService = new AprvService(); 
 	MigrationResultService resService = new MigrationResultService();
 	
+	@SuppressWarnings("unchecked")
 	public void migration(Map<String,Object> conf) throws MigrationException {
 		super.conf = conf;
 		super.steper = loadStepPrinter(conf);
+		this.APPR_ATTACH_EID = String.valueOf(((Map<String,Object>)conf.get("extra")).get("eid"));
 		run();
 	}
 	
@@ -101,7 +105,8 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 		
 	}
 	@SuppressWarnings("unchecked")
-	private MigrationResult migProcess(Map<String, Object> condition) throws MigrationException {
+	@Deprecated
+	private MigrationResult migProcess_old(Map<String, Object> condition) throws MigrationException {
 		Map<String,Object> params = (Map<String, Object>) condition.get("params");
 		log.info("{}",params);
 		MigrationResult result = new MigrationResult();
@@ -140,6 +145,77 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 					 */
 					fileMakeResult = super.makeFile(con, file, folder,false);
 					con = fileMakeResult.getConnection();
+					/**
+					 * 5. file id Description 갱신
+					 */
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("docId", fileMakeResult.getDocId());
+					param.put("description", file.getFILE_ID());
+					con.requestPost("updateDocProperty", param);
+					successCnt++;
+				} catch(XAPIException e) {
+					log.error(e.getMessage(),e);
+				} catch (Exception e) {
+					log.error(e.getMessage(),e);
+				} finally {
+					super.recordAudit(file.getFILE_ID(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
+					con.close();
+				}
+			} catch (MigrationException e) {
+				// TODO Auto-generated catch block
+				log.error(e.getMessage(),e);
+				e.printStackTrace();
+			} catch (Exception e) {
+				log.error(e.getMessage(),e);
+				e.printStackTrace();
+			}
+		}
+		log.debug("total : {} / target : {}" , fileCount , successCnt);
+		log.trace("list Detail : {}",files);
+		
+		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private MigrationResult migProcess(Map<String, Object> condition) throws MigrationException {
+		Map<String,Object> params = (Map<String, Object>) condition.get("params");
+		log.info("{}",params);
+		MigrationResult result = new MigrationResult();
+		List<AprvFile> files = srcService.searchFiles(params);
+		int fileCount = files.size(); 
+		int successCnt = 0;
+		for(AprvFile file : files) {
+			try {
+				/**
+				 * 1. 폴더 생성 호출
+				 */
+				List<Map<String,Object>> folderList = this.makeFolderListFromPath(file);
+				XeConnect con = null;
+				String folderId = null;
+				try {
+					con = super.getConnection(this.conf);
+					folderId = super.makeFolder(con, folderList, APPR_ATTACH_EID);
+					/**
+					 * 2. 폴더 권한 변경
+					 */
+					List<AprvPerson> personsInHist = srcService.searchPersonsFromHist(file);
+					List<AprvPerson> personsInPrgrHist = srcService.searchPersonsFromPrgrHist(file);
+					this.modifyRights(con, folderId,personsInHist,personsInPrgrHist);
+					//폴더 ID -> 결재번호로 대체
+					super.recordAudit(this.makeFldPath(file)+","+file.getAPRV_SEQ(), folderId, "CREATE", "0", "Success");
+				} catch(XAPIException e) {
+					log.error(e.getMessage(),e);
+					super.recordAudit(this.makeFldPath(file)+","+file.getAPRV_SEQ(), folderId, "ERROR", e.getErrorCode(), e.toString());
+				} 
+				/**
+				 * 3. 파일 생성
+				 */
+				FileMakeResult fileMakeResult = null;
+				try {
+					/**
+					 * 4. 파일 생성
+					 */
+					fileMakeResult = super.makeFile(con, file, folderId,false);
 					/**
 					 * 5. file id Description 갱신
 					 */
@@ -247,7 +323,28 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 		sb.append("/");
 		sb.append(file.getAPRV_SEQ());
 		return sb.toString();
-		
+	}
+	
+	private List<Map<String,Object>> makeFolderListFromPath(AprvFile file) throws MigrationException {
+		String fldPath = this.makeFldPath(file);
+		List<Map<String, Object>> folderList = new ArrayList<Map<String, Object>>();
+		Map<String, Object> folder = null;
+		String[] fldPathArray = fldPath.split("/");
+		/**
+		 * 맨앞자리 공백으로 index 1부터 시작
+		 * ex) ["" , "2022" , "0614" , "12"]
+		 * SrcId는 이력 테이블용	
+		 */
+		for(int i = 1 ; i <fldPathArray.length ; i++) {
+	    	if (fldPathArray[i] != null && !(fldPathArray[i].trim()).equals("")) {
+	    		folder = new HashMap<String, Object>();
+	        	folder.put("name", fldPathArray[i]);
+	        	folder.put("createDate", format.format(file.getCREATE_DATE()));
+	        	folder.put("SrcId",this.makeFldPath(file)+","+file.getAPRV_SEQ());
+    		}
+	    	folderList.add(folder);
+	    }
+	    return folderList;
 	}
 	
 }
