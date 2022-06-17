@@ -252,7 +252,13 @@ public class ShMigHandler {
 		return audit;
 	}
 	/**
-	 * 해당 경로에 파일이 이미 존재하는 경우 삭제하고 재등록
+	 * 파일 중복 에러는 특수 처리
+	 * 파일 검색 후 중복파일 삭제하고 처리
+	 * connection reset 발생으로 인해 파일 삭제 api 호출시 새로운 커넥션 생성
+	 * 성능의 이슈로 connection reset이 발생할 때만 connection 재생성.
+	 * 파일 중복은 그냥 폴더의 full path + 파일명으로 처리 하는 것으로 재협의 
+	 * full path API 호출이 아닌 folder 생성시 사용한 LIst를 조합하여 만든 문자열 사용 - 2022-06-17
+	 * 
 	 * @param con
 	 * @param file
 	 * @param folder
@@ -276,14 +282,10 @@ public class ShMigHandler {
 									 , file.getModifyDate()
 									 , false, false);
 			if("ECM0001".equals(result.getReturnCode())) {
-				//파일 중복 에러는 특수 처리
-				//파일 검색 후 중복파일 삭제하고 처리
-				//connection reset 발생으로 인해 파일 삭제 api 호출시 새로운 커넥션 생성
-				//성능의 이슈로 connection reset이 발생할 때만 connection 재생성.
-				//파일 중복은 그냥 폴더의 full path + 파일명으로 처리 하는 것으로 재협의 
-				Document fd = xd.getDocument(folder.getEid());
+				//API 호출 connection reset 문제 발생으로 사용 X
+				//Document fd = xd.getDocument(folder.getEid());
 				DuplicatedFileException e = new DuplicatedFileException(result.getReturnCode()
-																	   ,fd.getFullPath() +File.separator+file.getFileName()
+																	   ,folder.getPath() +File.separator+file.getFileName()
 																	   ,"File Already Exists.");
 				throw e;
 			} else {

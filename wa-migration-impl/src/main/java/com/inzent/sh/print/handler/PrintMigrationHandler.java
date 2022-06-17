@@ -12,6 +12,7 @@ import com.inzent.sh.exception.OmittedFolderException;
 import com.inzent.sh.print.entity.PrintFile;
 import com.inzent.sh.print.entity.PrintFolder;
 import com.inzent.sh.print.service.PrintService;
+import com.inzent.sh.util.Validator;
 import com.inzent.xedrm.api.Result;
 import com.inzent.xedrm.api.XAPIException;
 import com.inzent.xedrm.api.XeConnect;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrintMigrationHandler extends ShMigHandler implements MigrationHandler {
 	private final String DEFAULT_FOLDER_PATH = "/준공도면관리/"; 
+	public static final String REPLACED_CHAR = "^%";
 	PrintService srcService = new PrintService(); //도면 source 서비스
 	MigrationResultService resService = new MigrationResultService();
 	
@@ -137,8 +139,8 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 				 */
 				String folderId = null;
 				XeConnect con = null;
+				List<Map<String,Object>> folderList = makeFolderListFromPath(file);
 				try {
-					List<Map<String,Object>> folderList = makeFolderListFromPath(file);
 					con = super.getConnection(this.conf);
 					//eid Shared 고정 - 전사 문서함
 					//"준공도면관리" 프로퍼티 처리?
@@ -156,7 +158,13 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 					/**
 					 * 4. 파일 생성
 					 */
-					fileMakeResult = super.makeFile(con, file, folderId,false);
+					//1)중복파일 폴더 API 통해 추출
+					//fileMakeResult = super.makeFile(con, file, folderId,false);
+					//2)중복파일 폴더 LIST 사용
+					Folder fold = new Folder();
+					fold.setEid(folderId);
+					fold.setPath(this.makeFoldPathStringFromList(folderList));
+					fileMakeResult = super.makeFile(con, file, fold,false);
 					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
 					successCnt++;
 				} catch(XAPIException e) {
@@ -240,7 +248,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		// 이병희 수석님 의견으로 준공도면관리 라고 하는 폴더는 생성되어 있을 것이라고 확인.
 		// 중복에러 처리 나면서 ignore 될 것임.
 	    folder.put("createDate", "2020-01-01 09:03:25"); 
-	    folder.put("FLD_SEQ" , folderInfoList.get(0).getFLD_SEQ());
+	    folder.put("SrcId" , folderInfoList.get(0).getFLD_SEQ());
 	    folderList.add(folder);
 	    
 	    String[] fldPathArray = fldPath.split("/");
@@ -262,7 +270,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	    	if (fldPathArray[i] != null && !(fldPathArray[i].trim()).equals("")) {
 	    		PrintFolder folderInfo = folderInfoList.get(i);
 	    		folder = new HashMap<String, Object>();
-	        	folder.put("name", fldPathArray[i]);
+	        	folder.put("name", Validator.convertValidStr(fldPathArray[i]));
 	        	folder.put("createDate", format.format(folderInfo.getREG_DT()));
 	        	folder.put("SrcId" , folderInfo.getFLD_SEQ());
     		}
@@ -286,5 +294,27 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	
 	public Folder makeFolderForOmittedFile(XeConnect con) {
 		return super.makeFolder(con, "부모없는 파일", "Shared");
+	}
+	/**
+	 * 파일 중복시 로그를 위해 중복파일이 존재하는 폴더 조회시 connection reset이 자주 발생. 
+	 * 해당 원인 파악이 어려워 수정
+	 * Map key 구성
+	 * name : 폴더명
+	 * createDate : 생성일
+	 * SrcId : 이력저장용 소스ID
+	 * 확장속성 대상 폴더인 경우 
+	 * elementAttr - sh:ctrNm / 폴더명
+	 * @param list
+	 * @return
+	 */
+	public String makeFoldPathStringFromList(List<Map<String,Object>> list) {
+		StringBuffer fldName = new StringBuffer();
+		fldName.append("/전사문서함/");
+		for(Map<String,Object> folderInfo : list) {
+			fldName.append(folderInfo.get("name"));
+			fldName.append("/");
+		}
+		fldName.deleteCharAt(fldName.length()-1);
+		return fldName.toString();
 	}
 }
