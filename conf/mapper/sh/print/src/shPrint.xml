@@ -55,10 +55,10 @@
 			FROM (
 				<include refid="searchFiles_base"/>
 				<if test="stime != null">
-					AND F.UPD_DT >= #{stime}
+					AND F.REG_DT >= #{stime}
 				</if>
 				<if test="etime != null">
-					AND F.UPD_DT <![CDATA[<=]]> #{etime}
+					AND F.REG_DT <![CDATA[<=]]> #{etime}
 				</if>
 			) T
 		) A

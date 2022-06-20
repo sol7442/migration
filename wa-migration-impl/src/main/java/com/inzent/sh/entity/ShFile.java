@@ -3,7 +3,7 @@ package com.inzent.sh.entity;
 import java.text.SimpleDateFormat;
 
 public interface ShFile {
-	public SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss.SSS");
+	public SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("YYYYMMddHHmmssSSS");
 	public String getPath();	 	//경로
 	public String getFileName(); 	//파일명
 	public String getRegister(); 	//등록자

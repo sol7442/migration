@@ -54,4 +54,27 @@ public class PrintFolder {
 			return false;
 		}
 	}
+	/**
+	 * 쿼리를 통한 ID값의 조회가 안되기 때문에 text 비교
+	 * @return
+	 * 56400,79497 , 79574 , 82358 , 82359 , 82360
+	 */
+	public static boolean isAddAttrValue(String fldNm) {
+		switch (fldNm) {
+		case "1.설계용역":
+			return true;
+		case "3.기타기술용역":
+			return true;
+		case "2.감리용역":
+			return true;				
+		case "4.택지개발공사":
+			return true;					
+		case "5.주택건설공사":
+			return true;
+		case "6.기타사업공사":
+			return true;
+		default:
+			return false;
+		}
+	}
 }

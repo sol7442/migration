@@ -61,7 +61,8 @@ public class ShMigHandler {
 		return xf.getOrCreateFolderByPath(path, eid);
 	}
 	/**
-	 * 
+	 * 폴더 계층쿼리 조회 X srcId 알 수 없어 이력을 남길 수가 없음.
+	 * @deprecated
 	 * @param con
 	 * @param folderList
 	 * @param eid
@@ -89,6 +90,42 @@ public class ShMigHandler {
 					continue;
 				}
 				recordAudit(String.valueOf(folderInfo.get("SrcId")), parentFolderId, "CREATE", "0", "Success");
+			} 
+			if("ECM0001".equals(result.getReturnCode())) {
+				parentFolderId = (String) result.getJsonObject().get("rid");
+				continue;
+			} 
+		}
+		return parentFolderId;
+	}
+	/**
+	 * 
+	 * @param con
+	 * @param folderList
+	 * @param eid
+	 * @return
+	 * @throws MigrationException 
+	 */
+	protected String makeFolderWithoutAudit(XeConnect con , List<Map<String,Object>> folderList ,String eid) throws MigrationException {
+		Result result = null;
+		XeFolder xf = new XeFolder(con);
+		XeElement xe = new XeElement(con);
+		String parentFolderId = eid;
+		for(Map<String,Object> folderInfo : folderList) {
+			result = xf.createFolder(parentFolderId, (String)folderInfo.get("name"));
+			if(result.isSuccess()) {
+				parentFolderId = (String)result.getData(0).get("rid");
+				modifyRights(con, parentFolderId);
+				@SuppressWarnings("unchecked")
+				Map<String,String> elementAttr = (Map<String, String>)folderInfo.get("elementAttr");
+				if(elementAttr != null) {
+					Result attrResult = xe.updateAttrEx(parentFolderId, elementAttr);
+					if(!attrResult.isSuccess()) {
+						// 확장속성 저장 실패로 인한 폴더 생성 실패
+						throw new XAPIException(attrResult.getReturnCode(),attrResult.getErrorMessage());
+					}
+					continue;
+				}
 			} 
 			if("ECM0001".equals(result.getReturnCode())) {
 				parentFolderId = (String) result.getJsonObject().get("rid");
@@ -265,7 +302,6 @@ public class ShMigHandler {
 	 * @return
 	 * @throws Exception
 	 */
-	@Deprecated
 	@SuppressWarnings("unchecked")
 	protected FileMakeResult makeFile(XeConnect con ,ShFile file ,Folder folder,boolean isReconnect) throws Exception {
 		XeDocument xd = new XeDocument(con);

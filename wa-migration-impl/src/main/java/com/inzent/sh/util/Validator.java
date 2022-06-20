@@ -4,7 +4,8 @@ package com.inzent.sh.util;
  * 특수문자 : / : * ? " < > | \ 
  * 문자열 : con , prn , aux , nul , com1~com9 , lpt1~lpt9
  * 폴더명이 .으로 끝나는 경우 
- * 모두 _ 처리
+ * 모두 _ 치환 처리
+ * 문자열은 뒤에 _ 붙히기
  * @param target
  * @return
  */

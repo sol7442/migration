@@ -117,8 +117,9 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		/**
 		 * 누락파일 저장용 폴더 생성
 		 * 누락파일 -> 계층쿼리를 통해 조회된 폴더에 누락이 생긴 경우 해당 파일은 누락파일 저장용 폴더에 넣는다.
+		 * 누락파일 처리 X
 		 */
-		XeConnect conOmittedFolder = null;
+		/*XeConnect conOmittedFolder = null;
 		try {
 			conOmittedFolder = super.getConnection(this.conf);
 			Folder omittedFolder = this.makeFolderForOmittedFile(conOmittedFolder);
@@ -130,7 +131,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 			if(conOmittedFolder !=null) {
 				conOmittedFolder.close();
 			}
-		}
+		}*/
 		
 		for(PrintFile file : files) {
 			try {
@@ -139,43 +140,48 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 				 */
 				String folderId = null;
 				XeConnect con = null;
-				List<Map<String,Object>> folderList = makeFolderListFromPath(file);
+				List<Map<String,Object>> folderList = null;
+				FileMakeResult fileMakeResult = null;
 				try {
+					folderList = makeFolderListFromPathWithoutQuery(file);
 					con = super.getConnection(this.conf);
 					//eid Shared 고정 - 전사 문서함
 					//"준공도면관리" 프로퍼티 처리?
-					folderId = super.makeFolder(con,folderList , "Shared");
+					folderId = super.makeFolderWithoutAudit(con,folderList , "Shared");
+					super.recordAudit(String.valueOf(file.getFLD_SEQ()), folderId, "CREATE", "0", "Success");
 				} catch (XAPIException e) {
 					log.error(e.getMessage(),e);
 					//폴더 생성 결과 저장 진행중
 					super.recordAudit(String.valueOf(file.getFLD_SEQ()),"" , "ERROR", e.getErrorCode(), e.toString());
 				} catch (OmittedFolderException e) {
-					folderId = omittedFolderId;
+					/*folderId = omittedFolderId;
+					fileMakeResult = super.makeFile(con, file, folderId,false);
+					successCnt++;*/
 				}
-				
-				FileMakeResult fileMakeResult = null;
-				try {
-					/**
-					 * 4. 파일 생성
-					 */
-					//1)중복파일 폴더 API 통해 추출
-					//fileMakeResult = super.makeFile(con, file, folderId,false);
-					//2)중복파일 폴더 LIST 사용
-					Folder fold = new Folder();
-					fold.setEid(folderId);
-					fold.setPath(this.makeFoldPathStringFromList(folderList));
-					fileMakeResult = super.makeFile(con, file, fold,false);
-					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
-					successCnt++;
-				} catch(XAPIException e) {
-					log.error(e.getMessage(),e);
-				} catch(DuplicatedFileException e) {
-					super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(),"", "IGNORE", "0", e.getMessage()+" : "+e.getFullFilePath(),outCount,files.size());
-				} catch (Exception e) {
-					log.error(e.getMessage(),e);
-				} finally {
-					if(con != null) {
-						con.close();
+				if(fileMakeResult==null) {
+					try {
+						/**
+						 * 4. 파일 생성
+						 */
+						//1)중복파일 폴더 API 통해 추출
+						//fileMakeResult = super.makeFile(con, file, folderId,false);
+						//2)중복파일 폴더 LIST 사용
+						Folder fold = new Folder();
+						fold.setEid(folderId);
+						fold.setPath(this.makeFoldPathStringFromList(folderList));
+						fileMakeResult = super.makeFile(con, file, fold,false);
+						super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(), fileMakeResult.getDocId(), "CREATE", fileMakeResult.getErrCode(), fileMakeResult.getErrMsg(),outCount,files.size());
+						successCnt++;
+					} catch(XAPIException e) {
+						log.error(e.getMessage(),e);
+					} catch(DuplicatedFileException e) {
+						super.recordAudit(String.valueOf(file.getOBJ_SEQ())+","+file.getOBJ_FILE_SEQ(),"", "IGNORE", "0", e.getMessage()+" : "+e.getFullFilePath(),outCount,files.size());
+					} catch (Exception e) {
+						log.error(e.getMessage(),e);
+					} finally {
+						if(con != null) {
+							con.close();
+						}
 					}
 				}
 			} catch (MigrationException e) {
@@ -184,7 +190,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 			} catch (Exception e) {
 				log.error(e.getMessage(),e);
 				e.printStackTrace();
-			}
+			} 
 		}
 		log.debug("total : {} / target : {}" , fileCount , successCnt);
 		log.trace("list Detail : {}",files);
@@ -236,7 +242,13 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	private List<String> readIdsFile() {
 		return null;
 	}
-	
+	/**
+	 * @deprecated 
+	 * 계층쿼리 수행 후 비교 로직 사용 X - 성능상의 이슈 (2022-06-20 이병희 수석님)
+	 * @param file
+	 * @return
+	 * @throws MigrationException
+	 */
 	private List<Map<String, Object>> makeFolderListFromPath(PrintFile file) throws MigrationException {
 		String fldPath = file.getFLD_PATH();
 		List<PrintFolder> folderInfoList = srcService.searchFolders(makeParamForFolders(String.valueOf(file.getFLD_SEQ())));
@@ -248,7 +260,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 		// 이병희 수석님 의견으로 준공도면관리 라고 하는 폴더는 생성되어 있을 것이라고 확인.
 		// 중복에러 처리 나면서 ignore 될 것임.
 	    folder.put("createDate", "2020-01-01 09:03:25"); 
-	    folder.put("SrcId" , folderInfoList.get(0).getFLD_SEQ());
+	    folder.put("SrcId" , "준공도면관리");
 	    folderList.add(folder);
 	    
 	    String[] fldPathArray = fldPath.split("/");
@@ -285,6 +297,46 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	    }
 	    return folderList;
 	}
+	/**
+	 * 
+	 * @param file
+	 * @return
+	 * @throws MigrationException
+	 */
+	private List<Map<String, Object>> makeFolderListFromPathWithoutQuery(PrintFile file) throws MigrationException {
+		String fldPath = file.getFLD_PATH();
+		List<Map<String, Object>> folderList = new ArrayList<Map<String, Object>>();
+		//최상위 폴더
+		Map<String, Object> folder = new HashMap<String, Object>();
+		folder.put("name", "준공도면관리");
+		// api개선 이후 폴더생성일 적용 시 사용. 상수값?
+		// 이병희 수석님 의견으로 준공도면관리 라고 하는 폴더는 생성되어 있을 것이라고 확인.
+		// 중복에러 처리 나면서 ignore 될 것임.
+	    folder.put("createDate", "2020-01-01 09:03:25"); 
+	    folder.put("SrcId" , "준공도면관리");
+	    folderList.add(folder);
+	    
+	    String[] fldPathArray = fldPath.split("/");
+	    for(int i = 0 ; i <fldPathArray.length ; i++) {
+	    	if (i == 0 && "SH공사".equals(fldPathArray[0])) {
+               continue;
+	        }
+	    	if (fldPathArray[i] != null && !(fldPathArray[i].trim()).equals("")) {
+	    		folder = new HashMap<String, Object>();
+	        	folder.put("name", Validator.convertValidStr(fldPathArray[i]));
+    		}
+	    	
+	    	if (i == 2 && PrintFolder.isAddAttrValue(String.valueOf(folderList.get(i-1).get("name")))) {
+	    		Map<String, String> attrValue = new HashMap<String, String>();
+	    		attrValue.put("sh:ctrNm", fldPathArray[i]);
+	    		folder.put("elementAttr", attrValue);
+	    	}
+	    	folderList.add(folder);
+	    }
+	    return folderList;
+	}
+	
+	
 	
 	private Map<String,Object> makeParamForFolders(String fldSeq) {
 		Map<String,Object> params = new HashMap<String, Object>();
@@ -293,7 +345,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	}
 	
 	public Folder makeFolderForOmittedFile(XeConnect con) {
-		return super.makeFolder(con, "부모없는 파일", "Shared");
+		return super.makeFolder(con, DEFAULT_FOLDER_PATH+"부모없는 파일", "Shared");
 	}
 	/**
 	 * 파일 중복시 로그를 위해 중복파일이 존재하는 폴더 조회시 connection reset이 자주 발생. 

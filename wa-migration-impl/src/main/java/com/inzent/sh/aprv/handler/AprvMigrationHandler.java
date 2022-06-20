@@ -194,7 +194,7 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 				String folderId = null;
 				try {
 					con = super.getConnection(this.conf);
-					folderId = super.makeFolder(con, folderList, APPR_ATTACH_EID);
+					folderId = super.makeFolderWithoutAudit(con, folderList, APPR_ATTACH_EID);
 					/**
 					 * 2. 폴더 권한 변경
 					 */
