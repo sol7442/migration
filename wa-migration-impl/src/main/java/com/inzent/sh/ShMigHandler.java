@@ -18,6 +18,7 @@ import java.util.UUID;
 import org.json.simple.JSONObject;
 
 import com.inzent.sh.entity.FileMakeResult;
+import com.inzent.sh.entity.FolderList;
 import com.inzent.sh.entity.ShFile;
 import com.inzent.sh.exception.DuplicatedFileException;
 import com.inzent.sh.util.YamlUtil;
@@ -99,7 +100,7 @@ public class ShMigHandler {
 		return parentFolderId;
 	}
 	/**
-	 * 
+	 * 폴더의 정보 중 폴더명 밖에 활용 못하여 이력 로그에 사용할 srcId를 확보 X
 	 * @param con
 	 * @param folderList
 	 * @param eid
@@ -131,6 +132,51 @@ public class ShMigHandler {
 				parentFolderId = (String) result.getJsonObject().get("rid");
 				continue;
 			} 
+		}
+		return parentFolderId;
+	}
+	/**
+	 * 
+	 * @param con
+	 * @param folderList
+	 * @param eid
+	 * @param fullPath : String으로 된 최총 폴더를 먼저 조회.
+	 * @return
+	 * @throws MigrationException
+	 */
+	protected String makeFolderWithoutAudit(XeConnect con , FolderList folderList ,String eid) throws MigrationException {
+		Result result = null;
+		XeFolder xf = new XeFolder(con);
+		XeElement xe = new XeElement(con);
+		String parentFolderId = eid;
+		
+		try {
+			Folder targetFolder = xf.getFolderByPath(folderList.getFullPath());
+			parentFolderId = targetFolder.getEid();
+		} catch (XAPIException e) {
+			if("FOL0003".equals(e.getErrorCode())) {
+				for(Map<String,Object> folderInfo : folderList) {
+					result = xf.createFolder(parentFolderId, (String)folderInfo.get("name"));
+					if(result.isSuccess()) {
+						parentFolderId = (String)result.getData(0).get("rid");
+						modifyRights(con, parentFolderId);
+						@SuppressWarnings("unchecked")
+						Map<String,String> elementAttr = (Map<String, String>)folderInfo.get("elementAttr");
+						if(elementAttr != null) {
+							Result attrResult = xe.updateAttrEx(parentFolderId, elementAttr);
+							if(!attrResult.isSuccess()) {
+								// 확장속성 저장 실패로 인한 폴더 생성 실패
+								throw new XAPIException(attrResult.getReturnCode(),attrResult.getErrorMessage());
+							}
+							continue;
+						}
+					} 
+					if("ECM0001".equals(result.getReturnCode())) {
+						parentFolderId = (String) result.getJsonObject().get("rid");
+						continue;
+					} 
+				}
+			}
 		}
 		return parentFolderId;
 	}

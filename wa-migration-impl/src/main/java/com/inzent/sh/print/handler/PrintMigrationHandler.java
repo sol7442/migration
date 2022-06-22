@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.inzent.sh.ShMigHandler;
 import com.inzent.sh.entity.FileMakeResult;
+import com.inzent.sh.entity.FolderList;
 import com.inzent.sh.exception.DuplicatedFileException;
 import com.inzent.sh.exception.OmittedFolderException;
 import com.inzent.sh.print.entity.PrintFile;
@@ -140,10 +141,12 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 				 */
 				String folderId = null;
 				XeConnect con = null;
-				List<Map<String,Object>> folderList = null;
+				//List<Map<String,Object>> folderList = null;
+				FolderList folderList = null;
 				FileMakeResult fileMakeResult = null;
 				try {
-					folderList = makeFolderListFromPathWithoutQuery(file);
+					//folderList = makeFolderListFromPathWithoutQuery(file);
+					folderList = makeFolderList(file);
 					con = super.getConnection(this.conf);
 					//eid Shared 고정 - 전사 문서함
 					//"준공도면관리" 프로퍼티 처리?
@@ -298,7 +301,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	    return folderList;
 	}
 	/**
-	 * 
+	 * CreateDate 사용 안함으로 관련 소스 제거
 	 * @param file
 	 * @return
 	 * @throws MigrationException
@@ -306,16 +309,55 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	private List<Map<String, Object>> makeFolderListFromPathWithoutQuery(PrintFile file) throws MigrationException {
 		String fldPath = file.getFLD_PATH();
 		List<Map<String, Object>> folderList = new ArrayList<Map<String, Object>>();
+		
 		//최상위 폴더
 		Map<String, Object> folder = new HashMap<String, Object>();
 		folder.put("name", "준공도면관리");
 		// api개선 이후 폴더생성일 적용 시 사용. 상수값?
 		// 이병희 수석님 의견으로 준공도면관리 라고 하는 폴더는 생성되어 있을 것이라고 확인.
 		// 중복에러 처리 나면서 ignore 될 것임.
-	    folder.put("createDate", "2020-01-01 09:03:25"); 
 	    folder.put("SrcId" , "준공도면관리");
 	    folderList.add(folder);
-	    
+	    String[] fldPathArray = fldPath.split("/");
+	    for(int i = 0 ; i <fldPathArray.length ; i++) {
+	    	if (i == 0 && "SH공사".equals(fldPathArray[0])) {
+               continue;
+	        }
+	    	if (fldPathArray[i] != null && !(fldPathArray[i].trim()).equals("")) {
+	    		folder = new HashMap<String, Object>();
+	        	folder.put("name", Validator.convertValidStr(fldPathArray[i]));
+    		}
+	    	
+	    	if (i == 2 && PrintFolder.isAddAttrValue(String.valueOf(folderList.get(i-1).get("name")))) {
+	    		Map<String, String> attrValue = new HashMap<String, String>();
+	    		attrValue.put("sh:ctrNm", fldPathArray[i]);
+	    		folder.put("elementAttr", attrValue);
+	    	}
+	    	folderList.add(folder);
+	    }
+	    return folderList;
+	}
+	
+	/**
+	 * CreateDate 사용 안함으로 관련 소스 제거
+	 * @param file
+	 * @return
+	 * @throws MigrationException
+	 */
+	private FolderList makeFolderList(PrintFile file) throws MigrationException {
+		String fldPath = file.getFLD_PATH();
+		//FolderList folderList = new FolderList("전사함");
+		String rootPathName = (Map<String,Object>)conf.get("extra")==null?"전사함":String.valueOf(((Map<String,Object>)conf.get("extra")).get("rootPathName"));
+		FolderList folderList = new FolderList(rootPathName==null?"전사함":rootPathName);
+		
+		//최상위 폴더
+		Map<String, Object> folder = new HashMap<String, Object>();
+		folder.put("name", "준공도면관리");
+		// api개선 이후 폴더생성일 적용 시 사용. 상수값?
+		// 이병희 수석님 의견으로 준공도면관리 라고 하는 폴더는 생성되어 있을 것이라고 확인.
+		// 중복에러 처리 나면서 ignore 될 것임.
+	    folder.put("SrcId" , "준공도면관리");
+	    folderList.add(folder);
 	    String[] fldPathArray = fldPath.split("/");
 	    for(int i = 0 ; i <fldPathArray.length ; i++) {
 	    	if (i == 0 && "SH공사".equals(fldPathArray[0])) {

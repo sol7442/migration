@@ -80,7 +80,7 @@ startScripts {
 tasks.register('release-' +  project.name){
 	group = "ide";
 	doFirst() {
-		delete "$project.buildDir" + "/distributions/*"
+		delete "$project.buildDir" + "/distributions/*.*"
 	}
 	dependsOn('build')
 	def path = "../release/"+project.name;
