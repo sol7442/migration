@@ -43,7 +43,7 @@ public class AprvFile implements ShFile{
 	@Override
 	public String getPath() {
 		// TODO Auto-generated method stub
-		return this.PHY_SAVE_PATH_NM+File.separator+this.FILE_NM;
+		return this.PHY_SAVE_PATH_NM+File.separator+this.FILE_ID;
 	}
 
 	@Override

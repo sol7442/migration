@@ -11,10 +11,10 @@
 			FROM (
 				<include refid="searchFiles_base"/>
 				<if test="stime != null">
-					AND F.UPDATE_DATE >= TO_DATE(#{stime},'YYYY-MM-DD HH24:MI:SS')
+					AND TO_CHAR(F.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') >= #{stime}
 				</if>
 				<if test="etime != null">
-					AND F.UPDATE_DATE <![CDATA[<=]]> TO_DATE(#{etime},'YYYY-MM-DD HH24:MI:SS')
+					AND TO_CHAR(F.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') <![CDATA[<=]]> #{etime}
 				</if>
 			) INNER_SQL 
 			WHERE 1=1

@@ -1,20 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.quantum.mig.repo.MigrationSourceRepository">
-	<select id="size" resultType="java.lang.Integer" parameterType="java.util.Map">
-		SELECT COUNT(*) FROM OBJECT_USER
+	<select id="searchFolders" resultType="com.inzent.sh.kms.entity.KmsFolder" parameterType="java.util.Map">
+		SELECT TKM.MAP_ID
+		     , TKM.UP_MAP_ID
+		     , TKM.USE_AT
+		     , TKM.CREATE_USER
+		     , TKM.CREATE_DATE
+		     , TKM.UPDATE_DATE
+		     , TKD.DATA_NM
+		     , TKD.DATA_CN
+		FROM TNPSK_KNOW_MAP TKM
+		JOIN TNPSK_KNOW_MAP_DATA TKMD
+		ON TKM.MAP_ID = TKMD.MAP_ID
+		JOIN TNPSK_KNOW_DATA TKD 
+		ON TKD.KNOW_DATA_ID = TKMD.KNOW_DATA_ID
+		START WITH UP_MAP_ID = '00000001'
+		CONNECT BY PRIOR TKM.MAP_ID = TKM.UP_MAP_ID
+		WHERE TKM.MAP_ID = #{MAP_ID}
 	</select>
-	<select id="search" resultType="com.quantum.mig.entity.MigrationSource" parameterType="java.util.Map">
-		SELECT 
-			<include refid="mig.src.col"/>
-		FROM OBJECT_USER
-		WHERE 1=1
+
+	<select id="searchFiles" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT *
+		FROM
+		(
+			SELECT ROWNUM AS NUM , INNER_SQL.* 
+			FROM (
+				<include refid="searchFiles_base"/>
+				<if test="stime != null">
+					AND TO_CHAR(TA.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') >= #{stime}
+				</if>
+				<if test="etime != null">
+					AND TO_CHAR(TA.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') <![CDATA[<=]]> #{etime}
+				</if>
+			) INNER_SQL 
+			WHERE 1=1
+			<if test="page != null and count != null">
+			AND ROWNUM <![CDATA[>=]]> ((#{page}-1)*#{count}+1)
+			AND ROWNUM <![CDATA[<]]> (#{page})*#{count}
+			</if>
+		)			
 	</select>
-	<select id="read" resultType="com.quantum.mig.entity.MigrationSource" parameterType="com.quantum.mig.entity.DefaultMigIdentity">
-		SELECT 
-			*
-		FROM OBJECT_USER
-		WHERE 
-			id = #{id} 
-	</select>
+	<sql id="searchFiles_base">
+		SELECT TKDFS.FILE_ID
+			 , TKDFS.KNOW_DATA_ID
+			 , TKDFS.CREATE_USER
+			 , TKDFS.CREATE_DEPT
+			 , TA.PHY_SAVE_PATH_NM
+			 , TA.FILE_NM
+			 , TA.CREATE_DATE
+			 , TA.UPDATE_DATE
+			 , TKM.CREATE_DATE AS FLD_REG_DT
+			 , TKM.MAP_ID 
+		FROM TNPSK_KNOW_DATA_FILE_SAVE TKDFS
+		JOIN TNZZA_ADDFILE TA
+		ON TKDFS.FILE_ID = TA.FILE_ID
+		JOIN TNPSK_KNOW_MAP_DATA TKMD
+		ON TKMD.KNOW_DATA_ID = TKDFS.KNOW_DATA_ID
+		JOIN TNPSK_KNOW_DATA TKD
+		ON TKD.KNOW_DATA_ID = TKMD.KNOW_DATA_ID
+		JOIN TNPSK_KNOW_MAP TKM
+		ON TKM.MAP_ID = TKD.MAP_ID
+		WHERE TKDFS.USE_AT = 'Y'
+	</sql>
 </mapper>

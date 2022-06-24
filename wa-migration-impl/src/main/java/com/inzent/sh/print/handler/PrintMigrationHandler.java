@@ -302,6 +302,7 @@ public class PrintMigrationHandler extends ShMigHandler implements MigrationHand
 	}
 	/**
 	 * CreateDate 사용 안함으로 관련 소스 제거
+	 * @deprecated 폴더 검증로직 추가 버젼으로 인해 미사용
 	 * @param file
 	 * @return
 	 * @throws MigrationException

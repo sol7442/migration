@@ -197,10 +197,13 @@ public class AprvMigrationHandler extends ShMigHandler implements MigrationHandl
 					folderId = super.makeFolderWithoutAudit(con, folderList, APPR_ATTACH_EID);
 					/**
 					 * 2. 폴더 권한 변경
+					 * 2022-06-24 이병희 수석님 요청으로 불필요
 					 */
-					List<AprvPerson> personsInHist = srcService.searchPersonsFromHist(file);
-					List<AprvPerson> personsInPrgrHist = srcService.searchPersonsFromPrgrHist(file);
-					this.modifyRights(con, folderId,personsInHist,personsInPrgrHist);
+//					List<AprvPerson> personsInHist = srcService.searchPersonsFromHist(file);
+//					List<AprvPerson> personsInPrgrHist = srcService.searchPersonsFromPrgrHist(file);
+//					this.modifyRights(con, folderId,personsInHist,personsInPrgrHist);
+					/////////////////////불필요///////////////////////
+					super.modifyRights(con, folderId);
 					//폴더 ID -> 결재번호로 대체
 					super.recordAudit(this.makeFldPath(file)+","+file.getAPRV_SEQ(), folderId, "CREATE", "0", "Success");
 				} catch(XAPIException e) {
