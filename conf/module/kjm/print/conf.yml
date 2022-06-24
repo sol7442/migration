@@ -9,19 +9,19 @@ xe:
 condition:
   type: time
 time.condition:
-  stime: !!str 2014-08-13 12:00:00
-  etime: !!str 2022-04-20 12:00:00
-  page: 
-  count: 
+  stime: !!str 2014-09-12 00:00:00
+  etime: !!str 2014-09-29 18:00:00
+  page: 1
+  count: 20
 file.condition:
 simul.condition:
 repository:
   # 원천테이블
   source :
     driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://192.168.0.105:1433;database=SCIM
-    user: scim
-    passwd: scimpwd@1
+    url: jdbc:sqlserver://localhost:1433;database=DWG
+    user: SH
+    passwd: 85woalssla!
     path: /conf/mapper/sh/print/src/
     validation: select 1 
   
@@ -33,3 +33,5 @@ repository:
     passwd: oacxpwd@1
     path: /conf/mapper/sh/audit
     validation: select 1
+extra :
+  rootPathName : 전사 문서함

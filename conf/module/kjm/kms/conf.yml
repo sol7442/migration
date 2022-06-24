@@ -1,50 +1,38 @@
-
 class: kms
-handler : com.inzent.sh.KmsSimulMigrationHandler
+handler : com.inzent.sh.kms.handler.KmsMigrationHandler
 out.count: 10
-
-#migByTime
+xe:
+  connect.url: http://54.180.132.53:8300/xedrm
+  connect.id: SUPER
+  connect.pw: SUPER 
 condition:
   type: time
-  time.condition:
-    type: time
-    stime: 2022:04:15 12:00:00
-    etime: 2022:04:20 12:00:00
-    page: 10
-    count: 10
-  file.condition:
-    type: file
-  simul.condition:
-    type: simul
-    stime: 2022:04:15 12:00:00
-    etime: 2022:04:20 12:00:00
-    page: 10
-    count: 10
-repository:
-  # 사용 x
-  tar.drivder: org.mariadb.jdbc.Driver
-  tar.url: jdbc:mariadb://192.168.0.105:3306/scim
-  tar.passwd: oacxpwd@1
-  tar.user: root
-  tar.path: ../conf/mapper/test/kms/tar/
-  
+time.condition:
+    stime: !!str 2022-06-25 12:00:00
+    etime: !!str 2022-07-20 12:00:00
+    page: 
+    count: 
+file.condition:
+simul.condition:
+repository:  
   # 원천테이블
-  src.drivder: org.mariadb.jdbc.Driver
-  src.url: jdbc:mariadb://192.168.0.105:3306/migration
-  src.user: root
-  src.passwd: oacxpwd@1
-  src.path: ../conf/mapper/test/kms/src/
-  
-  # 결과테이블
-  res.drivder: org.mariadb.jdbc.Driver
-  res.url: jdbc:mariadb://192.168.0.105:3306/migration
-  res.user: root
-  res.passwd: oacxpwd@1
-  res.path: ../conf/mapper/test/kms/result/
-  
+  source: 
+    driver: oracle.jdbc.driver.OracleDriver
+    url: jdbc:oracle:thin:@192.168.0.105:1521:xe
+    user: sh
+    passwd: sh123
+    path: /conf/mapper/sh/kms/src/
+    validation: select 1 from dual
+    
   # 이력테이블
-  audit.drivder: org.mariadb.jdbc.Driver
-  audit.url: jdbc:mariadb://192.168.0.105:3306/migration
-  audit.user: root
-  audit.passwd: oacxpwd@1
-  audit.path: ../conf/mapper/test/kms/audit/
+  audit : 
+    driver: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://192.168.0.105:3306/migration
+    user: root
+    passwd: oacxpwd@1
+    path: /conf/mapper/sh/audit
+    validation: select 1
+extra :
+  eid : Shared
+  tempPath : D:/upload/kms
+  
