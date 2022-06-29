@@ -11,17 +11,17 @@ condition:
 time.condition:
   stime: !!str 2022-04-15 12:00:00
   etime: !!str 2022-10-20 12:00:00
-  page: 1
-  count: 10
+  page: 
+  count: 
 file.condition:
 simul.condition:
 repository:
   # 원천테이블
   source: 
     driver: oracle.jdbc.driver.OracleDriver
-    url: jdbc:oracle:thin:@192.168.0.105:1521:xe
-    user: sh
-    passwd: sh123
+    url: jdbc:oracle:thin:@localhost:1521:ORCL
+    user: inzent
+    passwd: 1234
     path: /conf/mapper/sh/aprv/src/
     validation: select 1 from dual
          

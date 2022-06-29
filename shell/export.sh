@@ -8,7 +8,7 @@ if [ -z "${MODULE_NAME}" ]; then
 else
   case ${1} in
     kms   ) echo "kms start"   ;;
-    appv  ) echo "aprv start"  ;;
+    aprv  ) echo "aprv start"  ;;
     print ) echo "print start" ;;
     *) 
     echo $"Usage : $0 {kms|aprv|print}"

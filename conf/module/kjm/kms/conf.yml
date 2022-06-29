@@ -18,9 +18,9 @@ repository:
   # 원천테이블
   source: 
     driver: oracle.jdbc.driver.OracleDriver
-    url: jdbc:oracle:thin:@192.168.0.105:1521:xe
-    user: sh
-    passwd: sh123
+    url: jdbc:oracle:thin:@localhost:1521:ORCL
+    user: inzent
+    passwd: 1234
     path: /conf/mapper/sh/kms/src/
     validation: select 1 from dual
     
@@ -33,6 +33,6 @@ repository:
     path: /conf/mapper/sh/audit
     validation: select 1
 extra :
-  eid : Shared
+  eid : 202203281636335j 
   tempPath : D:/upload/kms
   
